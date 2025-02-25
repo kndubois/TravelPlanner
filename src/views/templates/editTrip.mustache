@@ -1,0 +1,52 @@
+{{> layout }}
+
+<div class="container mt-4">
+    <h2 class="text-center mb-4">Edit Trip</h2>
+    <form action="/edit/{{trip.id}}" method="POST">
+        <div class="mb-3">
+            <label for="destination" class="form-label">Destination</label>
+            <input type="text" class="form-control" id="destination" name="destination" value="{{trip.destination}}" required>
+        </div>
+        <div class="mb-3">
+            <label for="start_date" class="form-label">Start Date</label>
+            <input type="date" class="form-control" id="start_date" name="start_date" value="{{trip.start_date}}" required>
+        </div>
+        <div class="mb-3">
+            <label for="end_date" class="form-label">End Date</label>
+            <input type="date" class="form-control" id="end_date" name="end_date" value="{{trip.end_date}}" required>
+        </div>
+        <div class="mb-3">
+            <label for="budget" class="form-label">Budget ($)</label>
+            <input type="number" class="form-control" id="budget" name="budget" value="{{trip.budget}}" required>
+        </div>
+        <div class="mb-3">
+            <label for="priority" class="form-label">Priority</label>
+            <select class="form-select" id="priority" name="priority">
+                <option value="High" {{#trip.priority}}selected{{/trip.priority}}>High</option>
+                <option value="Medium" {{#trip.priority}}selected{{/trip.priority}}>Medium</option>
+                <option value="Low" {{#trip.priority}}selected{{/trip.priority}}>Low</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="category" class="form-label">Category</label>
+            <input type="text" class="form-control" id="category" name="category" value="{{trip.category}}">
+        </div>
+        <div class="mb-3">
+            <label for="color" class="form-label">Color Code</label>
+            <input type="text" class="form-control" id="color" name="color" value="{{trip.color}}">
+        </div>
+        <div class="mb-3">
+            <label for="notes" class="form-label">Notes</label>
+            <textarea class="form-control" id="notes" name="notes" rows="2">{{trip.notes}}</textarea>
+        </div>
+        <div class="mb-3">
+            <label for="reminder" class="form-label">Reminder</label>
+            <input type="checkbox" id="reminder" name="reminder" {{#trip.reminder}}checked{{/trip.reminder}}>
+            <label for="reminder">Enable Reminder</label>
+        </div>
+        <div class="text-center">
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+            <a href="/mytrips" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>

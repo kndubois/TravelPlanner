@@ -14,8 +14,10 @@ app.set('views', __dirname + '/src/views');
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+
 app.use(express.static('public'));
-app.use('/images', express.static(__dirname + '/images'));
+app.use('/css', express.static(__dirname + '/public/css'));
+app.use('/images', express.static(__dirname + '/public/images'));
 
 db.init();  
 

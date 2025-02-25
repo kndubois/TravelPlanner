@@ -1,0 +1,90 @@
+{{> layout }}
+
+<div class="container mt-4">
+    <h2 class="text-center mb-4">My Trips</h2>
+    <p class="text-center text-muted">Manage and view all your planned trips here.</p>
+
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card p-3 shadow-sm border-0 rounded-4">
+                <h5 class="fw-bold">Filters</h5>
+                <form action="/mytrips" method="GET">
+                    <div class="mb-2">
+                        <label for="priority" class="form-label">Priority</label>
+                        <select class="form-select" id="priority" name="priority">
+                            <option value="" {{^filters.priority}}selected{{/filters.priority}}>All</option>
+                            <option value="High" {{#filters.priority}}{{#is_high}}selected{{/is_high}}{{/filters.priority}}>High</option>
+                            <option value="Medium" {{#filters.priority}}{{#is_medium}}selected{{/is_medium}}{{/filters.priority}}>Medium</option>
+                            <option value="Low" {{#filters.priority}}{{#is_low}}selected{{/is_low}}{{/filters.priority}}>Low</option>
+                        </select>
+
+                    </div>
+                    <div class="mb-2">
+                        <label for="category" class="form-label">Category</label>
+                        <input type="text" class="form-control" id="category" name="category" placeholder="Search category">
+                    </div>
+                    <div class="mb-2">
+                        <label for="budget" class="form-label">Max Budget</label>
+                        <input type="number" class="form-control" id="budget" name="budget" placeholder="$">
+                    </div>
+                    <div class="mb-2">
+                        <label for="start_date" class="form-label">Start Date</label>
+                        <input type="date" class="form-control" id="start_date" name="start_date">
+                    </div>
+                    <div class="mb-2">
+                        <label for="end_date" class="form-label">End Date</label>
+                        <input type="date" class="form-control" id="end_date" name="end_date">
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="col-md-9">
+            <div class="row row-cols-1 row-cols-md-2 g-4">
+                {{#trips}}
+                <div class="col">
+                    <div class="card shadow-sm border-0 rounded-4 h-100" style="border-top: 5px solid {{color}};">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="card-title fw-bold text-primary">{{destination}}</h5>
+                                <span class="badge {{#completed}}bg-success{{/completed}}{{^completed}}bg-warning text-dark{{/completed}}">
+                                    {{#completed}}Completed{{/completed}}{{^completed}}Planned{{/completed}}
+                                </span>
+                            </div>
+                            <p class="text-muted small">Category: {{category}}</p>
+                            <p><strong>Dates:</strong> <span class="badge bg-info text-dark">{{start_date}}</span> → <span class="badge bg-info text-dark">{{end_date}}</span></p>
+                            <p><strong>Budget:</strong> ${{budget}}</p>
+                            <p><strong>Priority:</strong> <span class="badge bg-{{#priority}}danger{{/priority}}{{^priority}}secondary{{/priority}}">{{priority}}</span></p>
+                            <p><strong>Notes:</strong> {{notes}}</p>
+                            <p><strong>Reminder:</strong> {{reminder}}</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <form action="/toggle-reminder/{{id}}" method="POST" class="d-inline">
+                                        <input type="checkbox" name="reminder" onchange="this.form.submit()" {{#reminder}}checked{{/reminder}}>
+                                        <label class="ms-1">Reminder</label>
+                                    </form>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <form action="/edit/{{id}}" method="GET">
+                                        <button type="submit" class="btn btn-warning btn-sm">Edit</button>
+                                    </form>
+                                    <form action="/complete/{{id}}" method="POST">
+                                        <button type="submit" class="btn btn-success btn-sm">Complete</button>
+                                    </form>
+                                    <form action="/delete/{{id}}" method="POST">
+                                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {{/trips}}
+                {{^trips}}
+                <p class="text-muted text-center">No trips planned yet.</p>
+                {{/trips}}
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,6 +1,83 @@
-{{! views/pages/dashboard.mustache }} 
 {{> layout }}
 
 <div class="container mt-4">
     <h2 class="text-center mb-4 fw-bold">Dashboard</h2>
     <p class="text-center text-muted">Manage your travel plans, access quick actions, and stay updated with your upcoming trips.</p>
+
+    <!-- Professional Quick Links Section -->
+    <div class="row g-4">
+        <div class="col-md-3">
+            <div class="card text-center p-3 shadow-sm border-0 rounded-4">
+                <h6 class="fw-bold text-primary">My Trips</h6>
+                <p class="text-muted small">View and manage all your planned trips.</p>
+                <a href="/mytrips" class="btn btn-primary btn-sm">View Trips</a>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center p-3 shadow-sm border-0 rounded-4">
+                <h6 class="fw-bold text-success">Plan a Trip</h6>
+                <p class="text-muted small">Start planning your next adventure.</p>
+                <a href="/add-trip" class="btn btn-success btn-sm">Add Trip</a>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center p-3 shadow-sm border-0 rounded-4">
+                <h6 class="fw-bold text-warning">Explore</h6>
+                <p class="text-muted small">Discover new destinations & travel tips.</p>
+                <a href="/explore" class="btn btn-warning btn-sm">Explore Now</a>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center p-3 shadow-sm border-0 rounded-4">
+                <h6 class="fw-bold text-secondary">Settings</h6>
+                <p class="text-muted small">Manage preferences & notifications.</p>
+                <a href="/settings" class="btn btn-secondary btn-sm">Go to Settings</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upcoming Trips & Reminders -->
+    <div class="row g-4 mt-4">
+        <!-- Upcoming Trips -->
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-header bg-primary text-white fw-bold">Upcoming Trips</div>
+                <div class="card-body">
+                    {{#trips}}
+                    <div class="alert alert-light border d-flex justify-content-between align-items-center">
+                        <span>
+                            <strong>{{destination}}</strong><br>
+                            <small class="text-muted">{{start_date}} → {{end_date}}</small>
+                        </span>
+                        <span class="badge {{#completed}}bg-success{{/completed}}{{^completed}}bg-warning text-dark{{/completed}}">
+                            {{#completed}}Completed{{/completed}}{{^completed}}Planned{{/completed}}
+                        </span>
+                    </div>
+                    {{/trips}}
+                    {{^trips}}
+                    <p class="text-muted text-center">No upcoming trips.</p>
+                    {{/trips}}
+                </div>
+            </div>
+        </div>
+
+        <!-- Reminders -->
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-header bg-warning text-dark fw-bold">Reminders</div>
+                <div class="card-body">
+                    {{#trips}}
+                    {{#reminder}}
+                    <div class="alert alert-warning border d-flex justify-content-between align-items-center">
+                        <span>You have a trip coming up for <strong>{{destination}}</strong> on <strong>{{start_date}}</strong>.</span>
+                    </div>
+                    {{/reminder}}
+                    {{/trips}}
+                    {{^trips}}
+                    <p class="text-muted text-center">No reminders set.</p>
+                    {{/trips}}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

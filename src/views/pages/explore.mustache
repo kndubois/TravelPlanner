@@ -1,0 +1,22 @@
+{{> layout }}
+
+<div class="container mt-4">
+    <h2 class="text-center mb-4">Explore</h2>
+    <p class="text-center text-muted">Find inspiration for your next adventure! Browse suggested destinations and travel tips.</p>
+
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        {{#suggested_trips}}
+        <div class="col">
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-body">
+                    <h5 class="card-title text-primary">{{destination}}</h5>
+                    <p class="card-text"><strong>Best time to visit:</strong> {{best_time}}</p>
+                    <p class="card-text"><strong>Estimated Budget:</strong> ${{budget}}</p>
+                    <p class="card-text text-muted small">Category: {{category}}</p>
+                    <a href="/add-trip?destination={{destination}}" class="btn btn-outline-primary">Plan This Trip</a>
+                </div>
+            </div>
+        </div>
+        {{/suggested_trips}}
+    </div>
+</div>
