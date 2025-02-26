@@ -10,3 +10,9 @@ ctrl + c to refresh
 npm install -g nodemon
 nodemon app.js
 use rs to refresh
+
+
+-- github
+git add .
+git commit -m "updated"
+git push -u origin main

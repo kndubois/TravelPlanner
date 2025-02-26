@@ -4,25 +4,27 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="/style.css">
 
-<div class="container-fluid p-5 text-center bg-primary text-white">
-    
-    {{#user}}
-    <h1 class="display-4">Welcome to TravelPlanner, {{user.username}}!</h1>
-    {{/user}}
-    {{^user}}
-    <h1 class="display-4">Welcome to TravelPlanner</h1>
-    {{/user}}
+<header class="hero-section bg-primary text-white text-center py-5">
+    <div class="container">
+        <h1 class="display-3 fw-bold">
+            {{#user}} Welcome to TravelPlanner, {{user.username}}! {{/user}}
+            {{^user}} Welcome to TravelPlanner! {{/user}}
+        </h1>
 
-    <p class="lead">Plan, manage, and explore your travels with ease.</p>
-    {{#user}}
-    <a href="/dashboard" class="btn btn-light btn-lg mt-3">Go to Dashboard</a>
-    {{/user}}
-    {{^user}}
-    <a href="/signup" class="btn btn-light btn-lg mt-3">Get Started</a>
-    {{/user}}
-</div>
+        <p class="lead mt-3">Plan, manage, and explore your travels with ease.</p>
 
-<section class="feature-section">
+        <div id="mt-4">
+            {{#user}}
+            <a href="/dashboard" class="btn btn-light btn-lg fw-bold px-4">Go to Dashboard</a>
+            {{/user}}
+            {{^user}}
+            <a href="/signup" class="btn btn-light btn-lg fw-bold px-4">Get Started</a>
+            {{/user}}
+        </div>
+    </div>
+</header>
+
+<section class="feature-section py-5 bg-light">
     <div class="container mt-5">
         <div class="row g-4 text-center">
             {{#user}}
@@ -30,9 +32,8 @@
                 <div class="card feature-card shadow-sm border-0 h-100 d-flex flex-column">
                 <img src="/images/dashboard.jpg" class="card-img-top img-fluid" alt="Dashboard">
                 <div class="card-body d-flex flex-column">
-                    <h5 class="card-title">Dashboard</h5>
+                    <h5 class="fw-bold">Dashboard</h5>
                     <p class="card-text flex-grow-1">View upcoming trips and reminders.</p>
-                    <a href="/dashboard" class="btn btn-outline-primary mt-auto">Go to Dashboard</a>
                 </div>
             </div>
         </div>
@@ -42,9 +43,8 @@
             <div class="card feature-card shadow-sm border-0 h-100 d-flex flex-column">
                 <img src="/images/travel.jpg" class="card-img-top img-fluid" alt="Travel">
                 <div class="card-body d-flex flex-column">
-                    <h5 class="card-title">Plan Your Trips</h5>
+                    <h5 class="fw-bold">Plan Your Trips</h5>
                     <p class="card-text flex-grow-1">Organize and manage your travel itinerary.</p>
-                    <a href="/mytrips" class="btn btn-outline-primary mt-auto">Manage Trips</a>
                 </div>
             </div>
         </div>
@@ -53,9 +53,8 @@
             <div class="card feature-card shadow-sm border-0 h-100 d-flex flex-column">
                 <img src="/images/vacation.jpg" class="card-img-top img-fluid" alt="Vacation">
                 <div class="card-body d-flex flex-column">
-                    <h5 class="card-title">Explore Destinations</h5>
-                    <p class="card-text flex-grow-1">Discover new places and plan your next adventure.</p>
-                    <a href="/explore" class="btn btn-outline-primary mt-auto">Start Exploring</a>
+                    <h5 class="fw-bold">Explore Destinations</h5>
+                    <p class="card-text flex-grow-1">Discover new places.</p>
                 </div>
             </div>
         </div>
@@ -65,29 +64,55 @@
             <div class="card feature-card shadow-sm border-0 h-100 d-flex flex-column">
                 <img src="/images/tips.png" class="card-img-top img-fluid" alt="Travel Tips">
                 <div class="card-body d-flex flex-column">
-                    <h5 class="card-title">Travel Tips</h5>
-                    <p class="card-text flex-grow-1">Get expert advice on making your trip more enjoyable.</p>
-                    <a href="/tips" class="btn btn-outline-primary mt-auto">Read Tips</a>
+                    <h5 class="fw-bold"">Travel Tips</h5>
+                    <p class="card-text flex-grow-1">Get expert advice for a smooth trip.</p>
                 </div>
             </div>
         </div>
         {{/user}}
     </div>
-</div>
+</section>
 
-<div class="container-fluid bg-light mt-5 p-5 text-center">
-    <h2 class="mb-3">Start Planning Your Next Adventure</h2>
-    <p class="lead text-muted">Create a trip, set a budget, and stay organized.</p>
-    {{#user}}
-    <a href="/mytrips" class="btn btn-primary btn-lg">View My Trips</a>
-    {{/user}}
-    {{^user}}
-    <a href="/signup" class="btn btn-primary btn-lg">Sign Up Now</a>
-    {{/user}}
-</div>
+<section class="why-choose-us py-5 text-center">
+    <div class="container">
+        <h2 class="fw-bold">Why Travelers Love TravelPlanner</h2>
+        <p class="text-muted">Thousands of travelers trust us to make their trips stress-free.</p>
+        
+        <div class="row mt-4">
+            <div class="col-md-4">
+                <h3 class="text-primary fw-bold">10K+</h3>
+                <p class="text-muted">Trips Managed</p>
+            </div>
+            <div class="col-md-4">
+                <h3 class="text-primary fw-bold">95%</h3>
+                <p class="text-muted">User Satisfaction</p>
+            </div>
+            <div class="col-md-4">
+                <h3 class="text-primary fw-bold">50+</h3>
+                <p class="text-muted">Destinations Explored</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<section class="cta bg-primary text-white text-center py-5">
+    <div class="container">
+        <h2 class="fw-bold">Ready to Plan Your Next Adventure?</h2>
+        <p class="lead mt-2">Join thousands of travelers and start organizing your dream trips today.</p>
+        <div class="mt-4">
+            {{#user}}
+            <a href="/mytrips" class="btn btn-light btn-lg fw-bold px-4">View My Trips</a>
+            {{/user}}
+            
+            {{^user}}
+            <a href="/signup" class="btn btn-light btn-lg fw-bold px-4">Sign Up Now</a>
+            {{/user}}
+        </div>
+    </div>
+</section>
 
 
 <footer class="bg-dark text-white py-3 text-center">
     <p class="mb-0">&copy; 2025 TravelPlanner. All rights reserved.</p>
-    <p class="small">Made for travelers, by travelers.</p>
 </footer>
