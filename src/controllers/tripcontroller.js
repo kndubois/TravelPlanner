@@ -120,12 +120,20 @@ router.post('/login', async (req, res) => {
 
 
 
-// POST Logout
+// logout
 router.get('/logout', (req, res) => {
     req.session.destroy(() => {
         res.redirect('/login');
     });
 });
+
+// POST Logout 
+router.post('/logout', (req, res) => {
+    req.session.destroy(() => {
+        res.redirect('/login');
+    });
+});
+
 
 // GET Dashboard (Protected)
 router.get('/dashboard', requireLogin, (req, res) => {
