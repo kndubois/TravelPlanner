@@ -4,6 +4,14 @@ Information will go here
 
 # useful info
 
+## packages
+```
+npm install express mustache-express express-session sqlite3 
+npm install bcryptjs@2.4.3
+npm install connect-flash passport passport-local
+npm install dotenv 
+```
+
 ## node.js
 ```
 npm install node.js
