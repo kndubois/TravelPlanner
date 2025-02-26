@@ -1,2 +1,75 @@
 {{> layout }}
+
+<div class="container mt-5">
+    <h2 class="text-center fw-bold text-primary">Travel Tips & Advice</h2>
+    <p class="text-center text-muted">Essential tips to make your trips smoother, safer, and more enjoyable.</p>
+
+    <!-- Search Bar -->
+    <div class="row justify-content-center my-4">
+        <div class="col-md-6">
+            <input type="text" class="form-control" id="searchTips" placeholder="Search for travel tips...">
+        </div>
+    </div>
+
+    <!-- Categories Section -->
+    <div class="row text-center mb-4">
+        <div class="col-md-3">
+            <button class="btn btn-outline-primary w-100 filter-btn" data-category="packing">Packing</button>
+        </div>
+        <div class="col-md-3">
+            <button class="btn btn-outline-primary w-100 filter-btn" data-category="budget">Budget Travel</button>
+        </div>
+        <div class="col-md-3">
+            <button class="btn btn-outline-primary w-100 filter-btn" data-category="safety">Safety</button>
+        </div>
+        <div class="col-md-3">
+            <button class="btn btn-outline-primary w-100 filter-btn" data-category="local">Local Tips</button>
+        </div>
+    </div>
+
+    <!-- Tips Section -->
+    <div class="row row-cols-1 row-cols-md-2 g-4" id="tipsContainer">
+        {{#tips}}
+        <div class="col" data-category="{{category}}">
+            <div class="card shadow-sm border-0 rounded-4 h-100">
+                <div class="card-body">
+                    <h5 class="fw-bold text-primary">{{title}}</h5>
+                    <p class="text-muted small"><strong>Category:</strong> {{category}}</p>
+                    <p>{{content}}</p>
+                </div>
+            </div>
+        </div>
+        {{/tips}}
+
+        {{^tips}}
+        <p class="text-muted text-center mt-4">No travel tips available.</p>
+        {{/tips}}
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const searchInput = document.getElementById("searchTips");
+        const filterButtons = document.querySelectorAll(".filter-btn");
+        const tips = document.querySelectorAll("#tipsContainer .col");
+
+        searchInput.addEventListener("keyup", function () {
+            const query = searchInput.value.toLowerCase();
+            tips.forEach(tip => {
+                const text = tip.innerText.toLowerCase();
+                tip.style.display = text.includes(query) ? "block" : "none";
+            });
+        });
+
+        filterButtons.forEach(button => {
+            button.addEventListener("click", function () {
+                const category = this.getAttribute("data-category");
+                tips.forEach(tip => {
+                    tip.style.display = tip.getAttribute("data-category") === category ? "block" : "none";
+                });
+            });
+        });
+    });
+</script>
+
 {{> footer }}

@@ -5,6 +5,14 @@ const router = express.Router();
 const tripModel = require('../models/tripModel');
 
 
+const formatDate = (dateString) => {
+    if (!dateString || isNaN(new Date(dateString))) return 'N/A'; // Show 'N/A' if invalid
+    const date = new Date(dateString);
+    return `${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}/${date.getFullYear()}`;
+};
+
+
+
 // Middleware to check if user is logged in
 const requireLogin = (req, res, next) => {
     if (!req.session.user) {
@@ -154,6 +162,12 @@ router.get('/mytrips', requireLogin, (req, res) => {
     };
 
     tripModel.getFilteredTrips(filters, (trips) => {
+
+        trips.forEach(trip => {
+            trip.start_date = formatDate(trip.start_date);
+            trip.end_date = formatDate(trip.end_date);
+        });
+
         res.render('pages/mytrips', { 
             trips, 
             filters,
@@ -161,6 +175,8 @@ router.get('/mytrips', requireLogin, (req, res) => {
         });
     });
 });
+
+
 
 
 // GET Add Trip Page (Pre-filled from Explore Page)
@@ -173,16 +189,23 @@ router.get('/add-trip', requireLogin, (req, res) => {
 // POST create a new trip
 router.post('/add', requireLogin, (req, res) => {
     const user_id = req.session.user.id; // Get logged-in user ID
-    const { destination, start_date, end_date, budget, notes, reminder, priority, category, color } = req.body;
+    let { destination, start_date, end_date, budget, notes, reminder, priority, category, color } = req.body;
+
 
     if (!destination || destination.length < 3 || budget <= 0) {
         return res.status(400).send("Invalid input: Destination must be at least 3 characters, and budget must be positive.");
+    }
+
+    if (!color) {
+        color = "#007BFF";  // Default blue color
     }
 
     tripModel.addTrip({ destination, start_date, end_date, budget, notes, reminder, priority, category, color }, user_id, () => {
         res.redirect('/mytrips');
     });
 });
+
+
 
 
 // GET Edit Trip Page
@@ -267,6 +290,20 @@ router.post('/update-settings', requireLogin, (req, res) => {
     console.log("Settings Updated:", { default_currency, notification_pref, theme });
     res.redirect('/settings');
 });
+
+
+// GET Travel Tips Page
+router.get('/tips', (req, res) => {
+    const tips = [
+        { title: "Pack Smart", category: "packing", content: "Roll your clothes to save space and avoid wrinkles." },
+        { title: "Save Money on Flights", category: "budget", content: "Book flights on weekdays for the best prices." },
+        { title: "Stay Safe While Traveling", category: "safety", content: "Avoid showing valuables in crowded areas." },
+        { title: "Learn Basic Local Phrases", category: "local", content: "Knowing a few local phrases can help in emergencies." }
+    ];
+
+    res.render('pages/tips', { tips, user: req.session.user });
+});
+
 
 
 module.exports = router;

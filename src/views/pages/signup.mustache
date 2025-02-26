@@ -1,37 +1,43 @@
-{{> layout }}
+{{> layout }} 
 
 <div class="container mt-5">
-    <div class="card p-4 shadow-sm mx-auto" style="max-width: 400px;">
-        <h2 class="text-center">Sign Up</h2>
-        <p class="text-center text-muted">Create a TravelPlanner account.</p>
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="card shadow-sm border-0 p-4 rounded-4">
+                <h2 class="text-center fw-bold text-primary">Sign Up</h2>
+                <p class="text-center text-muted">Create your TravelPlanner account</p>
 
-        {{#errorMessage}}
-        <div class="alert alert-danger text-center">{{errorMessage}}</div>
-        {{/errorMessage}}
+                {{#errorMessage}}
+                <div class="alert alert-danger text-center mt-3">{{errorMessage}}</div>
+                {{/errorMessage}}
 
-        <form action="/signup" method="POST">
-            <div class="mb-3">
-                <label for="name" class="form-label">Full Name</label>
-                <input type="text" class="form-control" id="name" name="name" required>
-            </div>
-            <div class="mb-3">
-                <label for="username" class="form-label">Username</label>
-                <input type="text" class="form-control" id="username" name="username" required>
-            </div>
-            <div class="mb-3">
-                <label for="email" class="form-label">Email</label>
-                <input type="email" class="form-control" id="email" name="email" required>
-            </div>
-            <div class="mb-3">
-                <label for="password" class="form-label">Password</label>
-                <input type="password" class="form-control" id="password" name="password" required>
-            </div>
-            <button type="submit" class="btn btn-primary w-100">Sign Up</button>
-        </form>
+                <form action="/signup" method="POST" class="mt-4">
+                    <div class="mb-3">
+                        <label for="name" class="form-label fw-bold">Full Name</label>
+                        <input type="text" class="form-control p-2" id="name" name="name" placeholder="Enter your full name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="username" class="form-label fw-bold">Username</label>
+                        <input type="text" class="form-control p-2" id="username" name="username" placeholder="Choose a username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label fw-bold">Email</label>
+                        <input type="email" class="form-control p-2" id="email" name="email" placeholder="Enter your email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label fw-bold">Password</label>
+                        <input type="password" class="form-control p-2" id="password" name="password" placeholder="Create a password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 fw-bold p-2">Sign Up</button>
+                </form>
 
-        <p class="text-center mt-3 small">
-            Already have an account? <a href="/login">Sign in here</a>.
-        </p>
+                <div class="text-center mt-4">
+                    <p class="text-muted">
+                        Already have an account? <a href="/login" class="fw-bold text-primary">Sign in here</a>
+                    </p>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 

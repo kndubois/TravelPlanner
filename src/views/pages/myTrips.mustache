@@ -1,91 +1,110 @@
-{{> layout }}
+{{> layout }} 
 
-<div class="container mt-4">
-    <h2 class="text-center mb-4">My Trips</h2>
+<div class="container mt-5">
+    <h2 class="text-center fw-bold text-primary">My Trips</h2>
     <p class="text-center text-muted">Manage and view all your planned trips here.</p>
 
-    <div class="row">
+    <div class="row mt-4">
+        <!-- Filters Section -->
         <div class="col-md-3">
-            <div class="card p-3 shadow-sm border-0 rounded-4">
-                <h5 class="fw-bold">Filters</h5>
+            <div class="card shadow-sm border-0 p-4 rounded-4">
+                <h5 class="fw-bold text-primary">Filters</h5>
                 <form action="/mytrips" method="GET">
-                    <div class="mb-2">
-                        <label for="priority" class="form-label">Priority</label>
+                    <div class="mb-3">
+                        <label for="priority" class="form-label fw-bold">Priority</label>
                         <select class="form-select" id="priority" name="priority">
                             <option value="" {{^filters.priority}}selected{{/filters.priority}}>All</option>
                             <option value="High" {{#filters.priority}}{{#is_high}}selected{{/is_high}}{{/filters.priority}}>High</option>
                             <option value="Medium" {{#filters.priority}}{{#is_medium}}selected{{/is_medium}}{{/filters.priority}}>Medium</option>
                             <option value="Low" {{#filters.priority}}{{#is_low}}selected{{/is_low}}{{/filters.priority}}>Low</option>
                         </select>
-
                     </div>
-                    <div class="mb-2">
-                        <label for="category" class="form-label">Category</label>
+                    <div class="mb-3">
+                        <label for="category" class="form-label fw-bold">Category</label>
                         <input type="text" class="form-control" id="category" name="category" placeholder="Search category">
                     </div>
-                    <div class="mb-2">
-                        <label for="budget" class="form-label">Max Budget</label>
-                        <input type="number" class="form-control" id="budget" name="budget" placeholder="$">
+                    <div class="mb-3">
+                        <label for="budget" class="form-label fw-bold">Max Budget ($)</label>
+                        <input type="number" class="form-control" id="budget" name="budget" placeholder="Enter budget">
                     </div>
-                    <div class="mb-2">
-                        <label for="start_date" class="form-label">Start Date</label>
+                    <div class="mb-3">
+                        <label for="start_date" class="form-label fw-bold">Start Date</label>
                         <input type="date" class="form-control" id="start_date" name="start_date">
                     </div>
-                    <div class="mb-2">
-                        <label for="end_date" class="form-label">End Date</label>
+                    <div class="mb-3">
+                        <label for="end_date" class="form-label fw-bold">End Date</label>
                         <input type="date" class="form-control" id="end_date" name="end_date">
                     </div>
-                    <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
+                    <button type="submit" class="btn btn-primary w-100 fw-bold">Apply Filters</button>
                 </form>
             </div>
         </div>
-        
+
+        <!-- Trips Section -->
         <div class="col-md-9">
-            <div class="row row-cols-1 row-cols-md-2 g-4">
-                {{#trips}}
-                <div class="col">
-                    <div class="card shadow-sm border-0 rounded-4 h-100" style="border-top: 5px solid {{color}};">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <h5 class="card-title fw-bold text-primary">{{destination}}</h5>
-                                <span class="badge {{#completed}}bg-success{{/completed}}{{^completed}}bg-warning text-dark{{/completed}}">
-                                    {{#completed}}Completed{{/completed}}{{^completed}}Planned{{/completed}}
-                                </span>
-                            </div>
-                            <p class="text-muted small">Category: {{category}}</p>
-                            <p><strong>Dates:</strong> <span class="badge bg-info text-dark">{{start_date}}</span> → <span class="badge bg-info text-dark">{{end_date}}</span></p>
-                            <p><strong>Budget:</strong> ${{budget}}</p>
-                            <p><strong>Priority:</strong> <span class="badge bg-{{#priority}}danger{{/priority}}{{^priority}}secondary{{/priority}}">{{priority}}</span></p>
-                            <p><strong>Notes:</strong> {{notes}}</p>
-                            <p><strong>Reminder:</strong> {{reminder}}</p>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <form action="/toggle-reminder/{{id}}" method="POST" class="d-inline">
-                                        <input type="checkbox" name="reminder" onchange="this.form.submit()" {{#reminder}}checked{{/reminder}}>
-                                        <label class="ms-1">Reminder</label>
-                                    </form>
-                                </div>
-                                <div class="d-flex gap-2">
-                                    <form action="/edit/{{id}}" method="GET">
-                                        <button type="submit" class="btn btn-warning btn-sm">Edit</button>
-                                    </form>
-                                    <form action="/complete/{{id}}" method="POST">
-                                        <button type="submit" class="btn btn-success btn-sm">Complete</button>
-                                    </form>
-                                    <form action="/delete/{{id}}" method="POST">
-                                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="fw-bold text-primary">Your Trips</h4>
+        <a href="/add-trip" class="btn btn-primary"><i class="bi bi-plus-circle"></i> Add New Trip</a>
+    </div>
+
+    <!-- Trip List Container -->
+    <div class="row g-4">
+        {{#trips}}
+        <div class="col-lg-6">
+            <div class="trip-card shadow-sm border-0 rounded-4 p-3 position-relative">
+                <!-- Status Badge -->
+                <span class="position-absolute top-0 start-50 translate-middle badge {{#completed}}bg-success{{/completed}}{{^completed}}bg-warning text-dark{{/completed}}">
+                    {{#completed}}Completed{{/completed}}{{^completed}}Upcoming{{/completed}}
+                </span>
+
+                <!-- Trip Image or Placeholder -->
+                <div class="trip-image rounded-3 mb-3" style="background: url('/images/destination.jpg') center/cover; height: 150px;"></div>
+
+                <!-- Trip Details -->
+                <h5 class="fw-bold text-dark">{{destination}}</h5>
+                <p class="text-muted small"><i class="bi bi-calendar-event"></i> {{start_date}} → {{end_date}}</p>
+                <p class="text-muted small"><i class="bi bi-cash-coin"></i> Budget: ${{budget}}</p>
+                <p class="text-muted small"><i class="bi bi-tags"></i> Category: {{category}}</p>
+                
+                {{#notes}}<p class="text-muted small"><i class="bi bi-journal-text"></i> {{notes}}</p>{{/notes}}
+                {{#reminder}}<p class="text-muted small"><i class="bi bi-bell"></i> Reminder: {{reminder}}</p>{{/reminder}}
+
+                <!-- Actions -->
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <form action="/toggle-reminder/{{id}}" method="POST">
+                        <input type="checkbox" name="reminder" onchange="this.form.submit()" {{#reminder}}checked{{/reminder}}>
+                        <label class="ms-1 small">Reminder</label>
+                    </form>
+                    <div class="d-flex gap-2">
+                        <form action="/edit/{{id}}" method="GET">
+                            <button type="submit" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-pencil-square"></i> Edit
+                            </button>
+                        </form>
+                        <form action="/complete/{{id}}" method="POST">
+                            <button type="submit" class="btn btn-outline-success btn-sm">
+                                <i class="bi bi-check-circle"></i> Complete
+                            </button>
+                        </form>
+                        <form action="/delete/{{id}}" method="POST">
+                            <button type="submit" class="btn btn-outline-danger btn-sm">
+                                <i class="bi bi-trash"></i> Delete
+                            </button>
+                        </form>
                     </div>
                 </div>
-                {{/trips}}
-                {{^trips}}
-                <p class="text-muted text-center">No trips planned yet.</p>
-                {{/trips}}
             </div>
         </div>
+        {{/trips}}
+
+        {{^trips}}
+        <p class="text-muted text-center mt-4">No trips planned yet.</p>
+        {{/trips}}
+    </div>
+</div>
+
+
     </div>
 </div>
 

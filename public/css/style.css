@@ -17,6 +17,11 @@ flex-direction: column;
 height: 100%;
 }
 
+.card.form-card {
+    display: block;
+    padding-bottom: 1rem; /* Adjust as needed */
+}
+
 .features-section {
 padding: 3rem 1rem;
 background-color: #fff;
@@ -86,3 +91,38 @@ color: white;
 text-align: center;
 padding: 15px 0;
 }
+
+/* Form Elements */
+.form-control {
+    border-radius: 8px;
+    font-size: 1rem;
+}
+
+/* Button Styling */
+.btn-primary {
+    background-color: #004AAD; /* Strong Blue */
+    border: none;
+    font-size: 1.1rem;
+}
+
+.btn-primary:hover {
+    background-color: #003580; /* Slightly Darker Blue */
+}
+
+/* Error Message */
+.alert-danger {
+    font-size: 0.95rem;
+    border-radius: 6px;
+}
+
+/* Links */
+.text-primary {
+    color: #004AAD !important;
+}
+
+.text-secondary {
+    color: #6c757d !important;
+}
+
+
+

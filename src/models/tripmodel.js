@@ -24,7 +24,7 @@ const init = () => {
         reminder TEXT,
         priority TEXT NOT NULL, 
         category TEXT NOT NULL,
-        color TEXT NOT NULL,
+        color TEXT NOT NULL DEFAULT '#007BFF',
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     )`);
 };
@@ -56,7 +56,6 @@ const findUserByEmail = (email, callback) => {
         callback(row);
     });
 };
-
 
 
 const getAllTrips = (callback) => {
@@ -136,7 +135,7 @@ const markTripCompleted = (id, callback) => {
 
 
 const getFilteredTrips = (filters, callback) => {
-    let query = "SELECT * FROM trips WHERE 1=1";
+    let query = "SELECT id, user_id, destination, start_date, end_date, budget, notes, reminder, priority, category, color, completed FROM trips WHERE 1=1";
     let params = [];
 
     if (filters.priority && filters.priority !== "") {
@@ -162,12 +161,13 @@ const getFilteredTrips = (filters, callback) => {
 
     db.all(query, params, (err, rows) => {
         if (err) {
-            console.error(err);
-            return;
+            console.error("Error fetching trips:", err);
+            return callback([]);
         }
         callback(rows);
     });
 };
+
 
 
 module.exports = { init, createUser, findUserByEmail, getAllTrips, addTrip, getTripById, updateTrip, deleteTrip, markTripCompleted, getFilteredTrips };
