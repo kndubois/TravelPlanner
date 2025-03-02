@@ -1,0 +1,143 @@
+{{> layout }}
+
+<div class="container mt-5">
+    <h2 class="text-center fw-bold text-primary">Trip Itinerary</h2>
+    <p class="text-center text-muted">Detailed plan for your upcoming trip.</p>
+
+    <!-- Trip Overview -->
+    <div class="card shadow-sm border-0 rounded-4 p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold text-primary">Trip Overview</h5>
+            <a href="/edit/{{id}}" class="btn btn-outline-primary btn-sm">Edit</a>
+        </div>
+        <p class="mb-1"><strong>Destination:</strong> {{destination}}</p>
+        <p class="mb-1"><strong>Dates:</strong> {{start_date}} - {{end_date}} ({{duration}} days)</p>
+        <p class="mb-1"><strong>Budget:</strong> {{budget}}</p>
+        <p class="mb-1"><strong>Priority:</strong> {{priority}}</p>    
+
+        <!-- Notes Section -->
+        {{#notes}}
+        <p class="mb-1"><strong>Notes:</strong> {{notes}}</p>
+        {{/notes}}
+
+        {{^notes}}
+        <p class="mb-1 text-muted">No notes available</p>
+        {{/notes}}
+    </div>
+
+    <!-- booking -->
+    <div class="card shadow-sm border-0 rounded-4 p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold text-primary">Booking Details</h5>
+            <button class="btn btn-outline-primary btn-sm" onclick="toggleAddBooking()">Add</button>
+        </div>
+
+        <div id="booking-list">
+            {{#bookings}}
+            <div class="booking-item border rounded-3 p-3 mb-2 shadow-sm" id="booking-{{id}}">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="fw-semibold mb-1 text-primary">{{type}}</p>
+                        <p class="text-muted small">{{details}}</p>
+                    </div>
+                    <div>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="toggleEditBooking('{{id}}')">Edit</button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteBooking('{{id}}', '{{trip_id}}')">Delete</button>
+                    </div>
+                </div>
+
+                <!-- Edit Form (Hidden by Default) -->
+                <form id="edit-booking-form-{{id}}" class="d-none" onsubmit="updateBooking(event, '{{id}}', '{{trip_id}}')">
+                    <input type="text" id="edit-booking-type-{{id}}" class="form-control mb-2" value="{{type}}">
+                    <input type="text" id="edit-booking-details-{{id}}" class="form-control mb-2" value="{{details}}">
+                    <button type="submit" class="btn btn-success btn-sm">Save</button>
+                    <button type="button" class="btn btn-danger btn-sm" onclick="toggleEditBooking('{{id}}')">Cancel</button>
+                </form>
+            </div>
+            {{/bookings}}
+
+            {{^bookings}}
+            <p class="text-muted">No bookings added yet.</p>
+            {{/bookings}}
+        </div>
+
+        <!-- Add Booking Form -->
+        <form id="add-booking-form" onsubmit="submitNewBooking(event)" class="d-none">
+            <input type="hidden" id="trip-id" value="{{id}}">
+            <label for="new-booking-type" class="fw-bold mt-2">Booking Type:</label>
+            <input type="text" id="new-booking-type" class="form-control mb-2" placeholder="Flight, Hotel, etc.">
+            <label for="new-booking-details" class="fw-bold">Details:</label>
+            <input type="text" id="new-booking-details" class="form-control mb-2" placeholder="Enter booking details">
+            <button type="submit" class="btn btn-success btn-sm">Add</button>
+            <button type="button" class="btn btn-danger btn-sm" onclick="toggleAddBooking()">Cancel</button>
+        </form>
+
+    </div>
+
+
+
+    <!-- Daily Schedule -->
+    <div class="card shadow-sm border-0 rounded-4 p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold text-primary">Daily Schedule</h5>
+            <button class="btn btn-outline-primary btn-sm" onclick="toggleAddSchedule()">Add</button>
+        </div>
+
+        <div id="schedule-list">
+            {{#schedule}}
+            <div class="schedule-item border rounded-3 p-3 mb-2 shadow-sm" id="schedule-{{id}}">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="fw-semibold mb-1 text-primary">{{formatted_date}}</p>
+                        <p class="text-muted small">{{activities}}</p>
+                    </div>
+                    <div>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="toggleEditSchedule('{{id}}')">Edit</button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteSchedule('{{id}}', '{{trip_id}}')">Delete</button>
+                    </div>
+                </div>
+
+                <!-- Edit Form (Hidden by Default) -->
+                <form id="edit-schedule-form-{{id}}" class="d-none" onsubmit="updateSchedule(event, '{{id}}', '{{trip_id}}')">
+                    <input type="date" id="edit-schedule-date-{{id}}" class="form-control mb-2" value="{{date}}">
+                    <input type="text" id="edit-schedule-activities-{{id}}" class="form-control mb-2" value="{{activities}}">
+                    <button type="submit" class="btn btn-success btn-sm">Save</button>
+                    <button type="button" class="btn btn-danger btn-sm" onclick="toggleEditSchedule('{{id}}')">Cancel</button>
+                </form>
+            </div>
+            {{/schedule}}
+
+            {{^schedule}}
+            <p class="text-muted">No schedule added yet.</p>
+            {{/schedule}}
+        </div>
+
+        <!-- Add Form -->
+        <form id="add-schedule-form" data-trip-id="{{id}}" onsubmit="submitNewSchedule(event, '{{id}}')" class="d-none">
+            <input type="hidden" id="trip-id" value="{{id}}">
+            <label for="new-schedule-date" class="fw-bold mt-2">Select Date:</label>
+            <input type="date" id="new-schedule-date" class="form-control mb-2">
+            <label for="new-schedule-activities" class="fw-bold">Activity:</label>
+            <input type="text" id="new-schedule-activities" class="form-control mb-2" placeholder="Enter activity">
+            <button type="submit" class="btn btn-success btn-sm">Add</button>
+            <button type="button" class="btn btn-danger btn-sm" onclick="toggleAddSchedule()">Cancel</button>
+        </form>
+    </div>
+
+
+    <!-- Expense Tracker -->
+    <div class="card shadow-sm border-0 rounded-4 p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold text-primary">Expense Tracker</h5>
+        </div>
+        <p class="mb-1"><strong>Total Budget:</strong> {{budget}}</p>
+        <p class="mb-1"><strong>Total Spent:</strong> {{total_spent}}</p>
+        <p class="mb-1"><strong>Remaining:</strong> {{remaining_budget}}</p>
+    </div>
+
+    <div class="text-center">
+        <a href="/mytrips" class="btn btn-outline-secondary">Back to My Trips</a>
+    </div>
+</div>
+
+{{> footer }}

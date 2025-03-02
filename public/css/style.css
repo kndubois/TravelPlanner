@@ -14,12 +14,13 @@ object-fit: cover;
 .card {
 display: flex;
 flex-direction: column;
-height: 100%;
+height:auto; /* 100% */
 }
 
 .card.form-card {
-    display: block;
-    padding-bottom: 1rem; /* Adjust as needed */
+    display: flex;
+    flex-direction: column;
+    height: auto;
 }
 
 .features-section {
@@ -53,7 +54,7 @@ transform: translateY(-5px);
 width: 100%;
 height:280px;
 object-fit: cover; 
-border-bottom: 3px solid #0d6efd;
+border-bottom: 3px solid #004AAD;
 }
 
 .feature-card h3 {
@@ -69,7 +70,7 @@ color: #555;
 
 .hero-section {
     padding: 80px 0;
-    background: linear-gradient(to right, #007bff, #0056b3);
+    background: linear-gradient(to right, #004AAD, #0056b3);
 }
 
 .card-body {
@@ -100,13 +101,13 @@ padding: 15px 0;
 
 /* Button Styling */
 .btn-primary {
-    background-color: #004AAD; /* Strong Blue */
+    background-color: #004AAD;
     border: none;
     font-size: 1.1rem;
 }
 
 .btn-primary:hover {
-    background-color: #003580; /* Slightly Darker Blue */
+    background-color: #003580;
 }
 
 /* Error Message */
@@ -120,9 +121,19 @@ padding: 15px 0;
     color: #004AAD !important;
 }
 
-.text-secondary {
-    color: #6c757d !important;
+.bg-primary {
+    background-color: #004AAD !important;
 }
 
 
+.countdown-section {
+    background-color: rgba(0, 74, 173, 0.05);
+    border-radius: 10px;
+    padding: 20px;
+}
 
+.badge {
+    font-size: 0.9rem;
+    padding: 5px 10px;
+    border-radius: 8px;
+}

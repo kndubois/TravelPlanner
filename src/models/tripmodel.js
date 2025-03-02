@@ -27,7 +27,32 @@ const init = () => {
         color TEXT NOT NULL DEFAULT '#007BFF',
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     )`);
+
+    db.run(`CREATE TABLE IF NOT EXISTS schedule (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        trip_id INTEGER NOT NULL,
+        date TEXT NOT NULL,
+        activities TEXT NOT NULL,
+        FOREIGN KEY (trip_id) REFERENCES trips(id) ON DELETE CASCADE
+    )`);
+
+    db.run(`CREATE TABLE IF NOT EXISTS bookings (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        trip_id INTEGER NOT NULL,
+        type TEXT NOT NULL,
+        details TEXT NOT NULL,
+        FOREIGN KEY (trip_id) REFERENCES trips(id) ON DELETE CASCADE
+    )`);
+
+    db.run(`CREATE TABLE IF NOT EXISTS tasks (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        trip_id INTEGER NOT NULL,
+        item TEXT NOT NULL,
+        completed INTEGER DEFAULT 0,
+        FOREIGN KEY (trip_id) REFERENCES trips(id) ON DELETE CASCADE
+    )`);
 };
+
 
 
 const createUser = (user, callback) => {
@@ -59,7 +84,7 @@ const findUserByEmail = (email, callback) => {
 
 
 const getAllTrips = (callback) => {
-    db.all("SELECT * FROM trips", [], (err, rows) => {
+    db.all("SELECT * FROM trips ORDER BY start_date ASC", [], (err, rows) => {
         if (err) {
             console.error(err);
             return;
@@ -169,5 +194,155 @@ const getFilteredTrips = (filters, callback) => {
 };
 
 
+const addScheduleItem = (tripId, schedule, callback) => {
+    const { date, activities } = schedule;
+    db.run(
+        "INSERT INTO schedule (trip_id, date, activities) VALUES (?, ?, ?)",
+        [tripId, date, activities],
+        function (err) {
+            if (err) {
+                console.error("🔥 Database insert error:", err.message);
+                return callback(false);
+            }
+            console.log("✅ Schedule added successfully with ID:", this.lastID);
+            callback(true);  // Make sure we return `true` instead of false
+        }
+    );
+};
 
-module.exports = { init, createUser, findUserByEmail, getAllTrips, addTrip, getTripById, updateTrip, deleteTrip, markTripCompleted, getFilteredTrips };
+
+const updateSchedule = (id, schedule, callback) => {
+    const { date, activities } = schedule;
+    db.run("UPDATE schedule SET date = ?, activities = ? WHERE id = ?",
+        [date, activities, id],
+        function (err) {
+            if (err) {
+                console.error("Error updating schedule:", err);
+                return callback(false);
+            }
+            callback(true);
+        }
+    );
+};
+
+
+const deleteSchedule = (id, callback) => {
+    db.run("DELETE FROM schedule WHERE id = ?", [id], function (err) {
+        if (err) {
+            console.error("Error deleting schedule:", err);
+            return callback(false);
+        }
+        callback(true);
+    });
+};
+
+const addBooking = (tripId, booking, callback) => {
+    const { type, details } = booking;
+    db.run("INSERT INTO bookings (trip_id, type, details) VALUES (?, ?, ?)",
+        [tripId, type, details],
+        function (err) {
+            if (err) {
+                console.error("Error adding booking:", err);
+                return callback(false);
+            }
+            callback(true, this.lastID); // Return the new booking ID
+        }
+    );
+};
+
+const updateBooking = (id, booking, callback) => {
+    const { type, details } = booking;
+    db.run("UPDATE bookings SET type = ?, details = ? WHERE id = ?",
+        [type, details, id],
+        function (err) {
+            if (err) {
+                console.error("Error updating booking:", err);
+                return callback(false);
+            }
+            callback(true);
+        }
+    );
+};
+
+const deleteBooking = (id, callback) => {
+    db.run("DELETE FROM bookings WHERE id = ?", [id], function (err) {
+        if (err) {
+            console.error("Error deleting booking:", err);
+            return callback(false);
+        }
+        callback(true);
+    });
+};
+
+
+const addTask = (tripId, task, callback) => {
+    const { item } = task;
+    db.run("INSERT INTO tasks (trip_id, item) VALUES (?, ?)",
+        [tripId, item],
+        function (err) {
+            if (err) {
+                console.error("Error adding task:", err);
+                return;
+            }
+            callback();
+        }
+    );
+};
+
+const updateTask = (id, task, callback) => {
+    const { item } = task;
+    db.run("UPDATE tasks SET item = ? WHERE id = ?",
+        [item, id],
+        function (err) {
+            if (err) {
+                console.error("Error updating task:", err);
+                return;
+            }
+            callback();
+        }
+    );
+};
+
+const deleteTask = (id, callback) => {
+    db.run("DELETE FROM tasks WHERE id = ?", [id], function (err) {
+        if (err) {
+            console.error("Error deleting task:", err);
+            return;
+        }
+        callback();
+    });
+};
+
+// Get itinerary details for a specific trip
+const getItineraryByTripId = (tripId, callback) => {
+    db.get("SELECT * FROM trips WHERE id = ?", [tripId], (err, row) => {
+        if (err) {
+            console.error(err);
+            return callback(null);
+        }
+        callback(row);
+    });
+};
+
+const getScheduleByTripId = (tripId, callback) => {
+    db.all("SELECT * FROM schedule WHERE trip_id = ?", [tripId], (err, rows) => {
+        if (err) {
+            console.error("Error fetching schedule:", err);
+            return callback([]);
+        }
+        callback(rows);
+    });
+};
+
+const getBookingsByTripId = (tripId, callback) => {
+    db.all("SELECT * FROM bookings WHERE trip_id = ?", [tripId], (err, rows) => {
+        if (err) {
+            console.error("Error fetching bookings:", err);
+            return callback([]);
+        }
+        console.log("✅ Retrieved Bookings from DB:", rows); // ✅ LOG BOOKINGS
+        callback(rows);
+    });
+};
+
+module.exports = { init, createUser, findUserByEmail, getAllTrips, addTrip, getTripById, updateTrip, deleteTrip, markTripCompleted, addScheduleItem, updateSchedule, deleteSchedule, addBooking, updateBooking, deleteBooking, addTask, updateTask, deleteTask, getItineraryByTripId, getScheduleByTripId, getBookingsByTripId, getFilteredTrips };

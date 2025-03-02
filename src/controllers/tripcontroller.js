@@ -1,14 +1,19 @@
 const express = require('express');
-const bcrypt = require('bcryptjs'); // For password hashing -- npm install bcryptjs@2.4.3
+const bcrypt = require('bcryptjs');
 
 const router = express.Router();
 const tripModel = require('../models/tripModel');
 
 
 const formatDate = (dateString) => {
-    if (!dateString || isNaN(new Date(dateString))) return 'N/A'; // Show 'N/A' if invalid
+    if (!dateString || isNaN(new Date(dateString))) return 'N/A';
     const date = new Date(dateString);
-    return `${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}/${date.getFullYear()}`;
+    
+    return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
 };
 
 
@@ -146,9 +151,48 @@ router.post('/logout', (req, res) => {
 // GET Dashboard (Protected)
 router.get('/dashboard', requireLogin, (req, res) => {
     tripModel.getAllTrips((trips) => {
-        res.render('pages/dashboard', { trips, user: req.session.user });
+
+        const today = new Date();
+
+        const ongoingTrips = trips.filter(trip => new Date(trip.start_date) <= today && new Date(trip.end_date) >= today );
+        
+        const upcomingTrips = trips.filter(trip => new Date(trip.start_date) > today );
+        
+        ongoingTrips.forEach(trip => {
+            trip.start_date = formatDate(trip.start_date);
+            trip.end_date = formatDate(trip.end_date);
+        });
+
+        upcomingTrips.forEach(trip => {
+            trip.start_date = formatDate(trip.start_date);
+            trip.end_date = formatDate(trip.end_date);
+        });
+
+        trips.forEach(trip => { trip.budget = formatCommas(trip.budget); });
+
+        const reminders = trips
+            .filter(trip => trip.reminder && trip.reminder.trim() !== "")
+            .map(trip => ({ 
+                destination: trip.destination, 
+                start_date: formatDate(trip.start_date)
+            }));
+
+
+        res.render('pages/dashboard', {
+            trips,
+            ongoing_trips: ongoingTrips,
+            completed_trips: trips.filter(trip => trip.completed),
+            upcoming_trips: upcomingTrips,
+            next_trip: upcomingTrips.length > 0 ? upcomingTrips[0] : null,
+            reminders,
+            trip_count: trips.length,
+            total_budget: formatCommas(trips.reduce((sum, trip) => sum + parseFloat(trip.budget.toString().replace(/[^0-9.]/g, '')) || 0, 0)),
+            total_spent: formatCommas(trips.reduce((sum, trip) => sum + (trip.total_spent || 0), 0)),
+            user: req.session.user
+        });
     });
 });
+
 
 
 // GET My Trips Page with Filters
@@ -166,6 +210,7 @@ router.get('/mytrips', requireLogin, (req, res) => {
         trips.forEach(trip => {
             trip.start_date = formatDate(trip.start_date);
             trip.end_date = formatDate(trip.end_date);
+            trip.budget = formatCommas(trip.budget); 
         });
 
         res.render('pages/mytrips', { 
@@ -206,7 +251,159 @@ router.post('/add', requireLogin, (req, res) => {
 });
 
 
+const formatCommas = (number) => { return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'CAD' }).format(number); };
 
+// GET Itinerary Page
+router.get('/itinerary/:id', requireLogin, (req, res) => {
+    const tripId = req.params.id;
+
+    tripModel.getTripById(tripId, (trip) => {
+        if (!trip) {
+            return res.status(404).send("Trip not found");
+        }
+
+        // Fetch schedule data for the trip
+        tripModel.getScheduleByTripId(tripId, (schedule) => {
+            trip.schedule = schedule || [];  // ✅ Ensure schedule is always an array
+
+            // Format schedule dates
+            trip.schedule = trip.schedule.map(item => ({
+                ...item,
+                formatted_date: formatDate(item.date)  // Apply date formatting
+            }));
+
+            // Fetch bookings data
+            tripModel.getBookingsByTripId(tripId, (bookings) => {
+                trip.bookings = bookings || [];  // Ensure bookings is always an array
+
+                console.log("DEBUG: Bookings Retrieved:", trip.bookings);
+            
+
+                const itineraryData = {
+                    id: trip.id, // ✅ Ensure this is passed!
+                    destination: trip.destination,
+                    start_date: formatDate(trip.start_date),
+                    end_date: formatDate(trip.end_date),
+                    duration: Math.ceil((new Date(trip.end_date) - new Date(trip.start_date)) / (1000 * 60 * 60 * 24)),
+                    budget: formatCommas(trip.budget),
+                    priority: trip.priority,
+                    notes: trip.notes || "",
+                    reminder: trip.reminder || "No reminder set.",
+                    total_spent: formatCommas(trip.total_spent || 0),
+                    remaining_budget: formatCommas(trip.budget - (trip.total_spent || 0)),
+                    schedule: trip.schedule || [],
+                    bookings: trip.bookings || [],
+                    tasks: [...(trip.packing_list || []), ...(trip.todo_list || [])],
+                    user: req.session.user
+                };
+
+                console.log("DEBUG: Sending Itinerary Data:", itineraryData); // ✅ Log trip data
+
+                res.render('pages/itinerary', itineraryData);
+            });
+        });
+    });
+});
+
+
+router.post('/itinerary/:id/add-schedule', requireLogin, (req, res) => {
+    const tripId = req.params.id;
+    const { date, activities } = req.body;
+
+    console.log("Received POST request for /itinerary/:id/add-schedule");
+    console.log("Trip ID:", tripId);
+    console.log("Request Body:", req.body);
+
+    tripModel.addScheduleItem(tripId, { date, activities }, (success) => {
+        if (!success) {
+            return res.status(500).json({ success: false, message: "Failed to add schedule." });
+        }
+        res.json({ success: true, message: "Schedule added successfully." });
+    });
+});
+
+router.post('/itinerary/:id/edit-schedule/:scheduleId', requireLogin, (req, res) => {
+    const { scheduleId } = req.params;
+    const { date, activities } = req.body;
+
+    tripModel.updateSchedule(scheduleId, { date, activities }, (success) => {
+        if (!success) {
+            return res.status(500).json({ success: false, message: "Failed to update schedule." });
+        }
+        res.json({ success: true, message: "Schedule updated successfully." });
+    });
+});
+
+router.post('/itinerary/:id/delete-schedule/:scheduleId', requireLogin, (req, res) => {
+    const { scheduleId } = req.params;
+
+    tripModel.deleteSchedule(scheduleId, (success) => {
+        if (!success) {
+            return res.status(500).json({ success: false, message: "Failed to delete schedule." });
+        }
+        res.json({ success: true, message: "Schedule deleted successfully." });
+    });
+});
+
+
+router.post('/itinerary/:id/add-booking', requireLogin, (req, res) => {
+    const tripId = req.params.id;
+    const { type, details } = req.body;
+
+    console.log("Received POST request for /itinerary/:id/add-booking");
+    console.log("Trip ID:", tripId, "Request Body:", req.body);
+
+    tripModel.addBooking(tripId, { type, details }, (success, bookingId) => {
+        if (!success) {
+            return res.status(500).json({ success: false, message: "Failed to add booking." });
+        }
+        res.json({ success: true, id: bookingId, type, details });
+    });
+});
+
+
+router.post('/itinerary/:id/edit-booking/:bookingId', requireLogin, (req, res) => {
+    const { bookingId } = req.params;
+    const { type, details } = req.body;
+
+    tripModel.updateBooking(bookingId, { type, details }, (success) => {
+        if (!success) {
+            return res.status(500).json({ success: false, message: "Failed to update booking." });
+        }
+        res.json({ success: true, message: "Booking updated successfully." });
+    });
+});
+
+router.post('/itinerary/:id/delete-booking/:bookingId', requireLogin, (req, res) => {
+    const { bookingId } = req.params;
+
+    tripModel.deleteBooking(bookingId, (success) => {
+        if (!success) {
+            return res.status(500).json({ success: false, message: "Failed to delete booking." });
+        }
+        res.json({ success: true, message: "Booking deleted successfully." });
+    });
+});
+
+
+router.post('/itinerary/:id/add-task', requireLogin, (req, res) => {
+    const tripId = req.params.id;
+    const { item } = req.body;
+
+    tripModel.addTask(tripId, { item }, () => {
+        res.json({ success: true, item });
+    });
+});
+
+
+router.post('/itinerary/:id/edit-task/:taskId', requireLogin, (req, res) => {
+    const { taskId } = req.params;
+    const { item } = req.body;
+
+    tripModel.updateTask(taskId, { item }, () => {
+        res.redirect(`/itinerary/${req.params.id}`);
+    });
+});
 
 // GET Edit Trip Page
 router.get('/edit/:id', requireLogin, (req, res) => {
@@ -272,10 +469,14 @@ router.get('/color/:color', (req, res) => {
 // GET Explore Page
 router.get('/explore', requireLogin, (req, res) => {
     const suggestedTrips = [
-        { destination: 'Paris', best_time: 'Spring', budget: 2000, category: "Europe" },
-        { destination: 'Tokyo', best_time: 'Autumn', budget: 2500, category: "Asia" },
-        { destination: 'Rome', best_time: 'Summer', budget: 1800, category: "Europe" }
-    ];
+        { destination: 'Paris', best_time: 'Spring', budget: formatCommas(2000), category: "Europe",image: "/images/paris.jpg"  },
+        { destination: 'Tokyo', best_time: 'Autumn', budget: formatCommas(2500), category: "Asia", image: "/images/tokyo.jpg"  },
+        { destination: 'Rome', best_time: 'Summer', budget: formatCommas(1800), category: "Europe", image: "/images/rome.jpg"  },
+        { destination: 'New York', best_time: 'Winter', budget: formatCommas(2200), category: "USA", image: "/images/newyork.jpg" },
+        { destination: 'Miami', best_time: 'Winter', budget: formatCommas(2000), category: "USA", image: "/images/miami.jpg" },
+        { destination: 'Sydney', best_time: 'Spring', budget: formatCommas(2700), category: "Australia", image: "/images/sydney.jpg" }
+    ];    
+    
     res.render('pages/explore', { suggested_trips: suggestedTrips, user: req.session.user });
 });
 

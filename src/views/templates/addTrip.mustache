@@ -6,9 +6,9 @@
         <p class="text-muted">Customize your travel plans and set your itinerary.</p>
     </div>
 
-    <div class="form-card shadow-sm border-0 rounded-4 p-4">
+    <div class="card shadow-sm border-0 rounded-4 p-4">
         <form action="/add" method="POST">
-            <div class="row g-3">
+            <div class="row g-4">
                 <div class="col-md-6">
                     <label for="destination" class="form-label fw-semibold">Destination</label>
                     <input type="text" class="form-control" id="destination" name="destination" value="{{destination}}" required>
@@ -24,7 +24,7 @@
                 </div>
             </div>
 
-            <div class="row g-3 mt-3">
+            <div class="row g-4 mt-3">
                 <div class="col-md-4">
                     <label for="budget" class="form-label fw-semibold">Budget ($)</label>
                     <input type="number" class="form-control" id="budget" name="budget" required>
@@ -42,6 +42,29 @@
                 <div class="col-md-4">
                     <label for="category" class="form-label fw-semibold">Category</label>
                     <input type="text" class="form-control" id="category" name="category">
+                </div>
+            </div>
+
+            <div class="row g-4 mt-3">
+                <div class="col-md-6">
+                    <label for="transportation" class="form-label fw-semibold">Mode of Transportation</label>
+                    <select class="form-select" id="transportation" name="transportation">
+                        <option value="Plane">Plane</option>
+                        <option value="Train">Train</option>
+                        <option value="Car">Car</option>
+                        <option value="Boat">Boat</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label for="accommodation" class="form-label fw-semibold">Accommodation Type</label>
+                    <select class="form-select" id="accommodation" name="accommodation">
+                        <option value="Hotel">Hotel</option>
+                        <option value="Hostel">Hostel</option>
+                        <option value="Airbnb">Airbnb</option>
+                        <option value="Camping">Camping</option>
+                        <option value="Other">Other</option>
+                    </select>
                 </div>
             </div>
 

@@ -1,120 +1,113 @@
-{{> layout }}
+{{> layout }} 
 
-<header class="hero-section bg-primary text-white text-center py-5">
-    <div class="container">
-        <h1 class="display-3 fw-bold">Welcome, {{user.username}}!</h1>
-        <p class="lead mt-3">Your travel plans, all in one place.</p>
+<header class="dashboard-header bg-light shadow-sm py-4">
+    <div class="container d-flex justify-content-between align-items-center">
+        <h2 class="fw-bold text-dark">Welcome, {{user.username}}!</h2>
+        <a href="/add-trip" class="btn btn-primary fw-bold px-4 py-2">+ Plan New Trip</a>
     </div>
 </header>
 
-<section class="dashboard-overview py-5 bg-light">
-    <div class="container">
-        <div class="row g-4 text-center">
-            <div class="col-md-3">
-                <div class="card feature-card shadow-sm border-0 h-100 d-flex flex-column">
-                    <img src="/images/mytrips.jpg" class="card-img-top img-fluid" alt="My Trips">
-                    <div class="card-body d-flex flex-column">
-                        <h5 class="fw-bold">My Trips</h5>
-                        <p class="card-text flex-grow-1">View and manage all your planned trips.</p>
-                        <a href="/mytrips" class="btn btn-primary mt-auto">View Trips</a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-3">
-                <div class="card feature-card shadow-sm border-0 h-100 d-flex flex-column">
-                    <img src="/images/planatrip.png" class="card-img-top img-fluid" alt="Plan a Trip">
-                    <div class="card-body d-flex flex-column">
-                        <h5 class="fw-bold">Plan a Trip</h5>
-                        <p class="card-text flex-grow-1">Start planning your next adventure.</p>
-                        <a href="/add-trip" class="btn btn-primary mt-auto">Add Trip</a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-3">
-                <div class="card feature-card shadow-sm border-0 h-100 d-flex flex-column">
-                    <img src="/images/explore.jpg" class="card-img-top img-fluid" alt="Explore">
-                    <div class="card-body d-flex flex-column">
-                        <h5 class="fw-bold">Explore</h5>
-                        <p class="card-text flex-grow-1">Discover new destinations & travel tips.</p>
-                        <a href="/explore" class="btn btn-primary mt-auto">Explore Now</a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-3">
-                <div class="card feature-card shadow-sm border-0 h-100 d-flex flex-column">
-                    <img src="/images/settings.jpg" class="card-img-top img-fluid" alt="Settings">
-                    <div class="card-body d-flex flex-column">
-                        <h5 class="fw-bold">Settings</h5>
-                        <p class="card-text flex-grow-1">Manage your preferences & notifications.</p>
-                        <a href="/settings" class="btn btn-primary mt-auto">Go to Settings</a>
-                    </div>
-                </div>
-            </div>
-        </div>
+<section class="container mt-4">
+    {{#next_trip}}
+    <div class="card shadow-sm border-0 rounded-4 p-4 text-center bg-primary text-white">
+        <h3 class="fw-bold">Next Trip Countdown</h3>
+        <p class="fs-5 fw-semibold">{{destination}}</p>
+        <p class="fs-6">{{start_date}} - {{end_date}}</p>
+        <div id="countdown" class="fw-bold fs-3 mt-2"></div>
     </div>
+    {{/next_trip}}
 </section>
 
-<section class="dashboard-trips py-5">
-    <div class="container">
-        <h2 class="text-center mb-4 fw-bold">Upcoming Trips & Reminders</h2>
-        
-        <div class="row g-4">
-            <!-- Upcoming Trips -->
-            <div class="col-md-6">
-                <div class="card shadow-sm border-0 rounded-4">
-                    <div class="card-header bg-primary text-white fw-bold">Upcoming Trips</div>
-                    <div class="card-body">
-                        {{#trips}}
-                        <div class="alert alert-light border d-flex justify-content-between align-items-center">
-                            <span>
-                                <strong>{{destination}}</strong><br>
-                                <small class="text-muted">{{start_date}} → {{end_date}}</small>
-                            </span>
-                            <span class="badge {{#completed}}bg-success{{/completed}}{{^completed}}bg-warning text-dark{{/completed}}">
-                                {{#completed}}Completed{{/completed}}{{^completed}}Planned{{/completed}}
-                            </span>
+<section class="container mt-5">
+    <div class="row g-4">
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-header bg-secondary text-white fw-bold fs-5">Ongoing Trips</div>
+                <div class="card-body">
+                    {{#ongoing_trips}}
+                    <div class="trip-entry border-bottom pb-3 mb-3 d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="fw-bold mb-1">{{destination}}</h5>
+                            <p class="text-muted small mb-1">{{start_date}} - {{end_date}}</p>
                         </div>
-                        {{/trips}}
-                        {{^trips}}
-                        <p class="text-muted text-center">No upcoming trips.</p>
-                        {{/trips}}
+                        <a href="/itinerary/{{id}}" class="btn btn-outline-primary btn-sm">View Itinerary</a>
                     </div>
+                    {{/ongoing_trips}}
+                    {{^ongoing_trips}}
+                    <p class="text-muted text-center">No ongoing trips.</p>
+                    {{/ongoing_trips}}
                 </div>
             </div>
 
-            <!-- Reminders -->
-            <div class="col-md-6">
-                <div class="card shadow-sm border-0 rounded-4">
-                    <div class="card-header bg-warning text-dark fw-bold">Reminders</div>
-                    <div class="card-body">
-                        {{#trips}}
-                        {{#reminder}}
-                        <div class="alert alert-warning border d-flex justify-content-between align-items-center">
-                            <span>You have a trip coming up for <strong>{{destination}}</strong> on <strong>{{start_date}}</strong>.</span>
+            <div class="card shadow-sm border-0 rounded-4 mt-4">
+                <div class="card-header bg-secondary text-white fw-bold fs-5">Upcoming Trips</div>
+                <div class="card-body">
+                    {{#upcoming_trips}}
+                    <div class="trip-entry border-bottom pb-3 mb-3 d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="fw-bold mb-1">{{destination}}</h5>
+                            <p class="text-muted small mb-1">{{start_date}} - {{end_date}}</p>
                         </div>
-                        {{/reminder}}
-                        {{/trips}}
-                        {{^trips}}
-                        <p class="text-muted text-center">No reminders set.</p>
-                        {{/trips}}
+                        <a href="/itinerary/{{id}}" class="btn btn-outline-primary btn-sm">View Itinerary</a>
                     </div>
+                    {{/upcoming_trips}}
+                    {{^upcoming_trips}}
+                    <p class="text-muted text-center">No upcoming trips planned.</p>
+                    {{/upcoming_trips}}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 rounded-4 mb-4">
+                <div class="card-header bg-dark text-white fw-bold fs-5">Reminders</div>
+                <div class="card-body">
+                    {{#reminders}}
+                    <p class="mb-2">
+                        You have <strong>{{destination}}</strong> coming up on <strong>{{start_date}}</strong>
+                    </p>
+                    {{/reminders}}
+                    {{^reminders}}
+                    <p class="text-muted text-center">No reminders set.</p>
+                    {{/reminders}}
+                </div>
+            </div>
+
+            <div class="card shadow-sm border-0 rounded-4 mb-4">
+                <div class="card-header bg-dark text-white fw-bold fs-5">Completed Trips</div>
+                <div class="card-body">
+                    {{#completed_trips}}
+                    <div class="trip-entry border-bottom pb-3 mb-3 d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="fw-bold mb-1">{{destination}}</h5>
+                            <p class="text-muted small mb-1">{{start_date}} - {{end_date}}</p>
+                            <p class="text-muted small"><strong>Completed</strong></p>
+                        </div>
+                        <a href="/itinerary/{{id}}" class="btn btn-outline-secondary btn-sm">View Itinerary</a>
+                    </div>
+                    {{/completed_trips}}
+                    {{^completed_trips}}
+                    <p class="text-muted text-center">No completed trips.</p>
+                    {{/completed_trips}}
+                </div>
+            </div>
+
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-header bg-dark text-white fw-bold fs-5">Travel Stats</div>
+                <div class="card-body text-center">
+                    <p><strong>Total Trips:</strong> {{trip_count}}</p>
+                    <p><strong>Total Budget:</strong> {{total_budget}}</p>
+                    <p><strong>Total Spent:</strong> {{total_spent}}</p>
                 </div>
             </div>
         </div>
     </div>
 </section>
 
-<section class="cta bg-primary text-white text-center py-5">
-    <div class="container">
-        <h2 class="fw-bold">Start Planning Your Next Adventure</h2>
-        <p class="lead mt-2">Stay organized and never miss an important trip.</p>
-        <div class="mt-4">
-            <a href="/add-trip" class="btn btn-light btn-lg fw-bold px-4">Plan a Trip</a>
-        </div>
-    </div>
-</section>
+<script>
+{{#next_trip}}
+    startCountdown("{{start_date}}", "countdown");
+{{/next_trip}}
+</script>
 
 {{> footer }}

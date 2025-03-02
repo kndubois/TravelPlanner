@@ -1,4 +1,4 @@
-{{> layout }} 
+{{> layout }}
 
 <div class="container mt-5">
     <h2 class="text-center fw-bold text-primary">My Trips</h2>
@@ -42,69 +42,64 @@
 
         <!-- Trips Section -->
         <div class="col-md-9">
-    <!-- Header Section -->
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4 class="fw-bold text-primary">Your Trips</h4>
-        <a href="/add-trip" class="btn btn-primary"><i class="bi bi-plus-circle"></i> Add New Trip</a>
-    </div>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="fw-bold text-primary">Your Trips</h4>
+                <a href="/add-trip" class="btn btn-primary"><i class="bi bi-plus-circle"></i> Add New Trip</a>
+            </div>
 
-    <!-- Trip List Container -->
-    <div class="row g-4">
-        {{#trips}}
-        <div class="col-lg-6">
-            <div class="trip-card shadow-sm border-0 rounded-4 p-3 position-relative">
-                <!-- Status Badge -->
-                <span class="position-absolute top-0 start-50 translate-middle badge {{#completed}}bg-success{{/completed}}{{^completed}}bg-warning text-dark{{/completed}}">
-                    {{#completed}}Completed{{/completed}}{{^completed}}Upcoming{{/completed}}
-                </span>
+            <!-- Trip List Container -->
+            <div class="row g-4">
+                {{#trips}}
+                <div class="col-lg-6">
+                    <div class="trip-card shadow-sm border-0 rounded-4 p-3 position-relative">
+                        <!-- Status Badge -->
+                        <span class="position-absolute top-0 start-50 translate-middle badge {{#completed}}bg-success{{/completed}}{{^completed}}bg-warning text-dark{{/completed}}">
+                            {{#completed}}Completed{{/completed}}{{^completed}}Upcoming{{/completed}}
+                        </span>
 
-                <!-- Trip Image or Placeholder -->
-                <div class="trip-image rounded-3 mb-3" style="background: url('/images/destination.jpg') center/cover; height: 150px;"></div>
+                        <!-- Trip Image or Placeholder -->
+                        <div class="trip-image rounded-3 mb-3" style="background: url('/images/destination.jpg') center/cover; height: 150px;"></div>
 
-                <!-- Trip Details -->
-                <h5 class="fw-bold text-dark">{{destination}}</h5>
-                <p class="text-muted small"><i class="bi bi-calendar-event"></i> {{start_date}} → {{end_date}}</p>
-                <p class="text-muted small"><i class="bi bi-cash-coin"></i> Budget: ${{budget}}</p>
-                <p class="text-muted small"><i class="bi bi-tags"></i> Category: {{category}}</p>
-                
-                {{#notes}}<p class="text-muted small"><i class="bi bi-journal-text"></i> {{notes}}</p>{{/notes}}
-                {{#reminder}}<p class="text-muted small"><i class="bi bi-bell"></i> Reminder: {{reminder}}</p>{{/reminder}}
+                        <!-- Trip Details -->
+                        <h5 class="fw-bold text-dark">{{destination}}</h5>
+                        <p class="text-muted small"><i class="bi bi-calendar-event"></i> {{start_date}} → {{end_date}}</p>
 
-                <!-- Actions -->
-                <div class="d-flex justify-content-between align-items-center mt-3">
-                    <form action="/toggle-reminder/{{id}}" method="POST">
-                        <input type="checkbox" name="reminder" onchange="this.form.submit()" {{#reminder}}checked{{/reminder}}>
-                        <label class="ms-1 small">Reminder</label>
-                    </form>
-                    <div class="d-flex gap-2">
-                        <form action="/edit/{{id}}" method="GET">
-                            <button type="submit" class="btn btn-outline-primary btn-sm">
-                                <i class="bi bi-pencil-square"></i> Edit
-                            </button>
-                        </form>
-                        <form action="/complete/{{id}}" method="POST">
-                            <button type="submit" class="btn btn-outline-success btn-sm">
-                                <i class="bi bi-check-circle"></i> Complete
-                            </button>
-                        </form>
-                        <form action="/delete/{{id}}" method="POST">
-                            <button type="submit" class="btn btn-outline-danger btn-sm">
-                                <i class="bi bi-trash"></i> Delete
-                            </button>
-                        </form>
+                        <p class="text-muted small"><i class="bi bi-tags"></i> Category: {{category}}</p>
+
+                        {{#reminder}}<p class="text-muted small"><i class="bi bi-bell"></i> Reminder: {{reminder}}</p>{{/reminder}}
+
+                        <!-- Actions -->
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <a href="/itinerary/{{id}}" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-list-task"></i> View Itinerary
+                            </a>
+                            <div class="d-flex gap-2">
+                                <form action="/edit/{{id}}" method="GET">
+                                    <button type="submit" class="btn btn-outline-primary btn-sm">
+                                        <i class="bi bi-pencil-square"></i> Edit
+                                    </button>
+                                </form>
+                                <form action="/complete/{{id}}" method="POST">
+                                    <button type="submit" class="btn btn-outline-success btn-sm">
+                                        <i class="bi bi-check-circle"></i> Complete
+                                    </button>
+                                </form>
+                                <form action="/delete/{{id}}" method="POST">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                                        <i class="bi bi-trash"></i> Delete
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
                     </div>
                 </div>
+                {{/trips}}
+
+                {{^trips}}
+                <p class="text-muted text-center mt-4">No trips planned yet.</p>
+                {{/trips}}
             </div>
         </div>
-        {{/trips}}
-
-        {{^trips}}
-        <p class="text-muted text-center mt-4">No trips planned yet.</p>
-        {{/trips}}
-    </div>
-</div>
-
-
     </div>
 </div>
 
