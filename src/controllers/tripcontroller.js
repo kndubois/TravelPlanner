@@ -179,9 +179,10 @@ router.get('/dashboard', requireLogin, (req, res) => {
         const completedTripsLimited = completedTrips.slice(0, 3);
 
 
-        trips.forEach(trip => { 
-            trip.budget = formatCommas(trip.budget); 
+        trips.forEach(trip => {
+            trip.budget = formatCommas(trip.budget);
         });
+
 
         const reminders = trips
             .filter(trip => trip.reminder && trip.reminder.trim() !== "")
@@ -189,7 +190,6 @@ router.get('/dashboard', requireLogin, (req, res) => {
                 destination: trip.destination, 
                 start_date: formatDate(trip.start_date)
             }));
-
 
         res.render('pages/dashboard', {
             trips,
@@ -222,12 +222,22 @@ router.get('/mytrips', requireLogin, (req, res) => {
     };
 
     tripModel.getFilteredTrips(filters, (trips) => {
+        const today = new Date();
 
         trips.forEach(trip => {
+            const startDate = new Date(trip.start_date);
+            const endDate = new Date(trip.end_date);
+            
             trip.start_date = formatDate(trip.start_date);
             trip.end_date = formatDate(trip.end_date);
-            trip.budget = formatCommas(trip.budget); 
+            
+            trip.is_completed = trip.completed === 1;
+            
+            trip.is_ongoing = !trip.is_completed && startDate <= today && endDate >= today;
+            
+            trip.is_upcoming = !trip.is_completed && startDate > today;
         });
+        
 
         res.render('pages/mytrips', { 
             trips, 
@@ -236,8 +246,6 @@ router.get('/mytrips', requireLogin, (req, res) => {
         });
     });
 });
-
-
 
 
 // GET Add Trip Page (Pre-filled from Explore Page)
@@ -257,10 +265,14 @@ router.post('/add', requireLogin, (req, res) => {
         return res.status(400).send("Invalid input: Destination must be at least 3 characters, and budget must be positive.");
     }
 
-    if (!color) {
-        color = "#007BFF";  // Default blue color
+    if (new Date(end_date) < new Date(start_date)) {
+        return res.status(400).send("Error: End date cannot be before start date.");
     }
 
+    if (!color) {
+        color = "#007BFF";  // Default blue color 
+    }
+    
     tripModel.addTrip({ destination, start_date, end_date, budget, notes, reminder, priority, category, color }, user_id, () => {
         res.redirect('/mytrips');
     });
@@ -280,23 +292,20 @@ router.get('/itinerary/:id', requireLogin, (req, res) => {
 
         // Fetch schedule data for the trip
         tripModel.getScheduleByTripId(tripId, (schedule) => {
-            trip.schedule = schedule || [];  // ✅ Ensure schedule is always an array
+            trip.schedule = schedule || []; 
 
             // Format schedule dates
             trip.schedule = trip.schedule.map(item => ({
                 ...item,
-                formatted_date: formatDate(item.date)  // Apply date formatting
+                formatted_date: formatDate(item.date)  
             }));
 
             // Fetch bookings data
             tripModel.getBookingsByTripId(tripId, (bookings) => {
-                trip.bookings = bookings || [];  // Ensure bookings is always an array
-
-                console.log("DEBUG: Bookings Retrieved:", trip.bookings);
-            
+                trip.bookings = bookings || [];  
 
                 const itineraryData = {
-                    id: trip.id, // ✅ Ensure this is passed!
+                    id: trip.id,
                     destination: trip.destination,
                     start_date: formatDate(trip.start_date),
                     end_date: formatDate(trip.end_date),
@@ -313,8 +322,6 @@ router.get('/itinerary/:id', requireLogin, (req, res) => {
                     user: req.session.user
                 };
 
-                console.log("DEBUG: Sending Itinerary Data:", itineraryData); // ✅ Log trip data
-
                 res.render('pages/itinerary', itineraryData);
             });
         });
@@ -325,10 +332,6 @@ router.get('/itinerary/:id', requireLogin, (req, res) => {
 router.post('/itinerary/:id/add-schedule', requireLogin, (req, res) => {
     const tripId = req.params.id;
     const { date, activities } = req.body;
-
-    console.log("Received POST request for /itinerary/:id/add-schedule");
-    console.log("Trip ID:", tripId);
-    console.log("Request Body:", req.body);
 
     tripModel.addScheduleItem(tripId, { date, activities }, (success) => {
         if (!success) {
@@ -365,9 +368,6 @@ router.post('/itinerary/:id/delete-schedule/:scheduleId', requireLogin, (req, re
 router.post('/itinerary/:id/add-booking', requireLogin, (req, res) => {
     const tripId = req.params.id;
     const { type, details } = req.body;
-
-    console.log("Received POST request for /itinerary/:id/add-booking");
-    console.log("Trip ID:", tripId, "Request Body:", req.body);
 
     tripModel.addBooking(tripId, { type, details }, (success, bookingId) => {
         if (!success) {
@@ -504,7 +504,6 @@ router.get('/settings', requireLogin, (req, res) => {
 // POST Update Settings
 router.post('/update-settings', requireLogin, (req, res) => {
     const { default_currency, notification_pref, theme } = req.body;
-    console.log("Settings Updated:", { default_currency, notification_pref, theme });
     res.redirect('/settings');
 });
 
