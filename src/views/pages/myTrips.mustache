@@ -8,10 +8,10 @@
         <!-- Filters Section -->
         <div class="col-md-3">
             <div class="card shadow-sm border-0 p-4 rounded-4">
-                <h5 class="fw-bold text-primary">Filters</h5>
+                <h5 class="fw-bold text-primary mb-3">Filter Trips</h5>
                 <form action="/mytrips" method="GET">
                     <div class="mb-3">
-                        <label for="priority" class="form-label fw-bold">Priority</label>
+                        <label for="priority" class="form-label fw-semibold">Priority</label>
                         <select class="form-select" id="priority" name="priority">
                             <option value="" {{^filters.priority}}selected{{/filters.priority}}>All</option>
                             <option value="High" {{#filters.priority}}{{#is_high}}selected{{/is_high}}{{/filters.priority}}>High</option>
@@ -20,19 +20,19 @@
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label for="category" class="form-label fw-bold">Category</label>
+                        <label for="category" class="form-label fw-semibold">Category</label>
                         <input type="text" class="form-control" id="category" name="category" placeholder="Search category">
                     </div>
                     <div class="mb-3">
-                        <label for="budget" class="form-label fw-bold">Max Budget ($)</label>
+                        <label for="budget" class="form-label fw-semibold">Max Budget ($)</label>
                         <input type="number" class="form-control" id="budget" name="budget" placeholder="Enter budget">
                     </div>
                     <div class="mb-3">
-                        <label for="start_date" class="form-label fw-bold">Start Date</label>
+                        <label for="start_date" class="form-label fw-semibold">Start Date</label>
                         <input type="date" class="form-control" id="start_date" name="start_date">
                     </div>
                     <div class="mb-3">
-                        <label for="end_date" class="form-label fw-bold">End Date</label>
+                        <label for="end_date" class="form-label fw-semibold">End Date</label>
                         <input type="date" class="form-control" id="end_date" name="end_date">
                     </div>
                     <button type="submit" class="btn btn-primary w-100 fw-bold">Apply Filters</button>
@@ -42,57 +42,75 @@
 
         <!-- Trips Section -->
         <div class="col-md-9">
-            <div class="d-flex justify-content-between align-items-center mb-5">
+            <div class="d-flex justify-content-between align-items-center mb-4">
                 <h4 class="fw-bold text-primary">Your Trips</h4>
-                <a href="/add-trip" class="btn btn-primary"><i class="bi bi-plus-circle"></i> Add New Trip</a>
+                <a href="/add-trip" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Add New Trip
+                </a>
             </div>
 
             <!-- Trip List Container -->
             <div class="row g-4">
                 {{#trips}}
-                <div class="col-lg-6">
-                    <div class="trip-card shadow-sm border-0 rounded-4 p-3 position-relative">
-                        <!-- Status Badge -->
-                        <span class="position-absolute top-0 start-50 translate-middle badge {{#completed}}bg-success{{/completed}}{{^completed}}bg-warning text-dark{{/completed}}">
-                            {{#completed}}Completed{{/completed}}{{^completed}}Upcoming{{/completed}}
-                        </span>
-
-                        <!-- Trip Image or Placeholder -->
-                        <div class="trip-image rounded-3 mb-3" style="background: url('/images/destination.jpg') center/cover; height: 150px;"></div>
+                <div class="col-lg-6 d-flex">
+                    <div class="trip-card card shadow-sm border-0 rounded-4 p-3 w-100">
+                        <!-- Trip Image -->
+                        <div class="trip-image position-relative" style="background: url('/images/destination.jpg') center/cover;">
+                            <span class="position-absolute top-0 start-50 translate-middle badge 
+                                {{#is_ongoing}}bg-info{{/is_ongoing}}
+                                {{#is_upcoming}}bg-warning text-dark{{/is_upcoming}}
+                                {{#is_completed}}bg-success{{/is_completed}}">
+                                {{#is_ongoing}}Ongoing{{/is_ongoing}}
+                                {{#is_upcoming}}Upcoming{{/is_upcoming}}
+                                {{#is_completed}}Completed{{/is_completed}}
+                            </span>
+                        </div>
 
                         <!-- Trip Details -->
-                        <h5 class="fw-bold text-dark">{{destination}}</h5>
-                        <p class="text-muted small"><i class="bi bi-calendar-event"></i> {{start_date}} → {{end_date}}</p>
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="fw-bold text-dark">{{destination}}</h5>
+                            <p class="text-muted small"><i class="bi bi-calendar-event"></i> {{start_date}} → {{end_date}}</p>
 
-                        <p class="text-muted small"><i class="bi bi-tags"></i> Category: {{category}}</p>
+                            <!-- Category & Reminder -->
+                            <div class="trip-info mt-2">
+                                {{#category}}
+                                <p><i class="bi bi-tags"></i> <strong>Category:</strong> {{category}}</p>
+                                {{/category}}
+                                {{#reminder}}
+                                <p><i class="bi bi-bell"></i> <strong>Reminder:</strong> {{reminder}}</p>
+                                {{/reminder}}
+                                {{^category}}{{^reminder}}
+                                <p class="text-muted">No extra details</p>
+                                {{/reminder}}{{/category}}
+                            </div>
 
-                        {{#reminder}}<p class="text-muted small"><i class="bi bi-bell"></i> Reminder: {{reminder}}</p>{{/reminder}}
 
-                        <!-- Actions -->
-                        <div class="d-flex justify-content-between align-items-center mt-3">
-                            <a href="/itinerary/{{id}}" class="btn btn-outline-primary btn-sm">
-                                <i class="bi bi-list-task"></i> View Itinerary
-                            </a>
-                            <div class="d-flex gap-2">
-                                <form action="/edit/{{id}}" method="GET">
-                                    <button type="submit" class="btn btn-outline-primary btn-sm">
-                                        <i class="bi bi-pencil-square"></i> Edit
-                                    </button>
-                                </form>
-                                <form action="/complete/{{id}}" method="POST">
-                                    <button type="submit" class="btn btn-outline-success btn-sm">
-                                        <i class="bi bi-check-circle"></i> Complete
-                                    </button>
-                                </form>
-                                <form action="/delete/{{id}}" method="POST">
-                                    <button type="submit" class="btn btn-outline-danger btn-sm">
-                                        <i class="bi bi-trash"></i> Delete
-                                    </button>
-                                </form>
+                            <!-- Actions -->
+                            <div class="trip-actions mt-3 d-flex justify-content-between">
+                                <a href="/itinerary/{{id}}" class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-list-task"></i>
+                                </a>
+                                <div class="d-flex gap-2">
+                                    <a href="/edit/{{id}}" class="btn btn-outline-primary btn-sm">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
+                                    <form action="/complete/{{id}}" method="POST">
+                                        <button type="submit" class="btn btn-outline-success btn-sm">
+                                            <i class="bi bi-check-circle"></i>
+                                        </button>
+                                    </form>
+                                    <form action="/delete/{{id}}" method="POST">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
+
+
                 {{/trips}}
 
                 {{^trips}}
