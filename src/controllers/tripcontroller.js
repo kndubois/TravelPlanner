@@ -93,7 +93,6 @@ router.post('/signup', async (req, res) => {
 });
 
 
-
 // POST Register
 router.post('/login', (req, res) => {
     const { email, password } = req.body;
@@ -154,9 +153,14 @@ router.get('/dashboard', requireLogin, (req, res) => {
 
         const today = new Date();
 
-        const ongoingTrips = trips.filter(trip => new Date(trip.start_date) <= today && new Date(trip.end_date) >= today );
-        const upcomingTrips = trips.filter(trip => new Date(trip.start_date) > today );
-        const completedTrips = trips.filter(trip => trip.completed);
+        trips.forEach(trip => {
+            const endDate = new Date(trip.end_date);
+            trip.is_completed = trip.completed === 1 || endDate < today;
+        });
+
+        const ongoingTrips = trips.filter(trip => !trip.is_completed && new Date(trip.start_date) <= today && new Date(trip.end_date) >= today);
+        const upcomingTrips = trips.filter(trip => !trip.is_completed && new Date(trip.start_date) > today);
+        const completedTrips = trips.filter(trip => trip.is_completed); 
 
         ongoingTrips.forEach(trip => {
             trip.start_date = formatDate(trip.start_date);
@@ -173,16 +177,13 @@ router.get('/dashboard', requireLogin, (req, res) => {
             trip.end_date = formatDate(trip.end_date);
         });
 
-
         const ongoingTripsLimited = ongoingTrips.slice(0, 3);
         const upcomingTripsLimited = upcomingTrips.slice(0, 3);
         const completedTripsLimited = completedTrips.slice(0, 3);
 
-
         trips.forEach(trip => {
             trip.budget = formatCommas(trip.budget);
         });
-
 
         const reminders = trips
             .filter(trip => trip.reminder && trip.reminder.trim() !== "")
@@ -227,14 +228,13 @@ router.get('/mytrips', requireLogin, (req, res) => {
         trips.forEach(trip => {
             const startDate = new Date(trip.start_date);
             const endDate = new Date(trip.end_date);
-            
+        
             trip.start_date = formatDate(trip.start_date);
             trip.end_date = formatDate(trip.end_date);
-            
-            trip.is_completed = trip.completed === 1;
-            
+        
+            trip.is_completed = trip.completed === 1 || endDate < today;
+        
             trip.is_ongoing = !trip.is_completed && startDate <= today && endDate >= today;
-            
             trip.is_upcoming = !trip.is_completed && startDate > today;
         });
         
@@ -446,10 +446,26 @@ router.post('/edit/:id', requireLogin, (req, res) => {
 // POST mark a trip as completed
 router.post('/complete/:id', requireLogin, (req, res) => {
     const id = req.params.id;
-    tripModel.markTripCompleted(id, () => {
-        res.redirect('/mytrips');
+
+    tripModel.getTripById(id, (trip) => {
+        if (!trip) {
+            return res.status(404).send("Trip not found");
+        }
+
+        const today = new Date();
+        const endDate = new Date(trip.end_date);
+
+        // ✅ Only mark a trip as completed if today is AFTER the end date
+        if (today < endDate) {
+            return res.status(400).send("Error: You cannot mark a trip as completed before it ends.");
+        }
+
+        tripModel.markTripCompleted(id, () => {
+            res.redirect('/mytrips');
+        });
     });
 });
+
 
 // POST delete a trip
 router.post('/delete/:id', requireLogin, (req, res) => {

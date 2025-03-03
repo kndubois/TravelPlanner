@@ -158,8 +158,7 @@ padding: 15px 0;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    min-height: 380px; 
-    height: 100%; 
+    height: 100%;
 }
 
 .trip-card .card-body {
@@ -167,6 +166,7 @@ padding: 15px 0;
     flex-direction: column;
     justify-content: space-between;
     flex-grow: 1;
+    padding-bottom: 10px; 
 }
 
 .trip-image {
@@ -197,8 +197,6 @@ padding: 15px 0;
     color: #004AAD;
 }
 
-
-
 .trip-actions {
     display: flex;
     justify-content: space-between;
@@ -210,14 +208,12 @@ padding: 15px 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
     padding: 0;
 }
 
-.btn-outline-primary,
-.btn-outline-success,
-.btn-outline-danger {
+.trip-actions .btn-outline-primary,
+.trip-actions .btn-outline-success,
+.trip-actions .btn-outline-danger {
     border-radius: 6px;
     width: 36px;
     height: 36px;
@@ -242,4 +238,113 @@ padding: 15px 0;
 
 .text-primary.small.fw-bold:hover {
     text-decoration: underline;
+}
+
+.btn-outline-primary {
+    color: #004AAD;
+    border-color: #004AAD;
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:focus,
+.btn-outline-primary:active {
+    background-color: #004AAD;
+    color: white;
+    border-color: #004AAD;
+}
+
+
+/* Custom Badge Colors - Blue Theme + Grey/Black */
+.badge-success {
+    background-color: #6C757D !important;  /* Grey */
+    color: white !important;
+}
+
+.badge-danger {
+    background-color: #1C1C1C !important;  /* Black */
+    color: white !important;
+}
+
+.badge-warning {
+    background-color: #007AB8 !important;  /* Vibrant Blue */
+    color: white !important;
+}
+
+.badge-info {
+    background-color: #004AAD !important;  /* Primary Blue */
+    color: white !important;
+}
+
+/* Override Bootstrap Defaults for Backgrounds */
+.bg-success {
+    background-color: #6C757D !important;  /* Grey */
+    color: white !important;
+}
+
+.bg-danger {
+    background-color: #1C1C1C !important;  /* Black */
+    color: white !important;
+}
+
+.bg-warning {
+    background-color: #007AB8 !important;  /* Vibrant Blue */
+    color: white !important;
+}
+
+.bg-info {
+    background-color: #004AAD !important;  /* Primary Blue */
+    color: white !important;
+}
+
+/* Customize Button Colors - Blue, Grey, and Black */
+.btn-outline-success {
+    color: #6C757D !important;
+    border-color: #6C757D !important;
+}
+
+.btn-outline-success:hover,
+.btn-outline-success:focus,
+.btn-outline-success:active {
+    background-color: #6C757D !important;
+    color: white !important;
+    border-color: #6C757D !important;
+}
+
+.btn-outline-danger {
+    color: #1C1C1C !important;
+    border-color: #1C1C1C !important;
+}
+
+.btn-outline-danger:hover,
+.btn-outline-danger:focus,
+.btn-outline-danger:active {
+    background-color: #1C1C1C !important;
+    color: white !important;
+    border-color: #1C1C1C !important;
+}
+
+.btn-outline-warning {
+    color: #007AB8 !important;
+    border-color: #007AB8 !important;
+}
+
+.btn-outline-warning:hover,
+.btn-outline-warning:focus,
+.btn-outline-warning:active {
+    background-color: #007AB8 !important;
+    color: white !important;
+    border-color: #007AB8 !important;
+}
+
+.btn-outline-info {
+    color: #004AAD !important;
+    border-color: #004AAD !important;
+}
+
+.btn-outline-info:hover,
+.btn-outline-info:focus,
+.btn-outline-info:active {
+    background-color: #004AAD !important;
+    color: white !important;
+    border-color: #004AAD !important;
 }
