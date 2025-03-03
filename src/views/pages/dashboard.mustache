@@ -10,7 +10,7 @@
 <section class="container mt-4">
     {{#next_trip}}
     <div class="card shadow-sm border-0 rounded-4 p-4 text-center bg-primary text-white">
-        <h3 class="fw-bold">Next Trip Countdown</h3>
+        <h3 class="fw-bold">Next Trip</h3>
         <p class="fs-5 fw-semibold">{{destination}}</p>
         <p class="fs-6">{{start_date}} - {{end_date}}</p>
         <div id="countdown" class="fw-bold fs-3 mt-2"></div>
@@ -18,11 +18,11 @@
     {{/next_trip}}
 </section>
 
-<section class="container mt-5">
+<section class="container mt-5 mb-5">
     <div class="row g-4">
         <div class="col-md-8">
-            <div class="card shadow-sm border-0 rounded-4">
-                <div class="card-header bg-secondary text-white fw-bold fs-5">Ongoing Trips</div>
+            <div class="card shadow-sm border-0">
+                <div class="card-header fw-bold">Ongoing Trips</div>
                 <div class="card-body">
                     {{#ongoing_trips}}
                     <div class="trip-entry border-bottom pb-3 mb-3 d-flex justify-content-between align-items-center">
@@ -39,8 +39,8 @@
                 </div>
             </div>
 
-            <div class="card shadow-sm border-0 rounded-4 mt-4">
-                <div class="card-header bg-secondary text-white fw-bold fs-5">Upcoming Trips</div>
+            <div class="card shadow-sm border-0 mt-4">
+                <div class="card-header fw-bold">Upcoming Trips</div>
                 <div class="card-body">
                     {{#upcoming_trips}}
                     <div class="trip-entry border-bottom pb-3 mb-3 d-flex justify-content-between align-items-center">
@@ -59,12 +59,12 @@
         </div>
 
         <div class="col-md-4">
-            <div class="card shadow-sm border-0 rounded-4 mb-4">
-                <div class="card-header bg-dark text-white fw-bold fs-5">Reminders</div>
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header fw-bold">Reminders</div>
                 <div class="card-body">
                     {{#reminders}}
                     <p class="mb-2">
-                        You have <strong>{{destination}}</strong> coming up on <strong>{{start_date}}</strong>
+                        <strong>{{destination}}</strong> on <strong>{{start_date}}</strong>
                     </p>
                     {{/reminders}}
                     {{^reminders}}
@@ -73,28 +73,29 @@
                 </div>
             </div>
 
-            <div class="card shadow-sm border-0 rounded-4 mb-4">
-                <div class="card-header bg-dark text-white fw-bold fs-5">Completed Trips</div>
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header fw-bold">Completed Trips</div>
                 <div class="card-body">
+
                     {{#completed_trips}}
                     <div class="trip-entry border-bottom pb-3 mb-3 d-flex justify-content-between align-items-center">
                         <div>
                             <h5 class="fw-bold mb-1">{{destination}}</h5>
                             <p class="text-muted small mb-1">{{start_date}} - {{end_date}}</p>
-                            <p class="text-muted small"><strong>Completed</strong></p>
                         </div>
-                        <a href="/itinerary/{{id}}" class="btn btn-outline-secondary btn-sm">View Itinerary</a>
+                        <a href="/itinerary/{{id}}" class="btn btn-outline-primary btn-sm">View Itinerary</a>
                     </div>
                     {{/completed_trips}}
+
                     {{^completed_trips}}
                     <p class="text-muted text-center">No completed trips.</p>
                     {{/completed_trips}}
                 </div>
             </div>
 
-            <div class="card shadow-sm border-0 rounded-4">
-                <div class="card-header bg-dark text-white fw-bold fs-5">Travel Stats</div>
-                <div class="card-body text-center">
+            <div class="card shadow-sm border-0">
+                <div class="card-header fw-bold">Travel Stats</div>
+                <div class="card-body">
                     <p><strong>Total Trips:</strong> {{trip_count}}</p>
                     <p><strong>Total Budget:</strong> {{total_budget}}</p>
                     <p><strong>Total Spent:</strong> {{total_spent}}</p>
@@ -108,6 +109,14 @@
 {{#next_trip}}
     startCountdown("{{start_date}}", "countdown");
 {{/next_trip}}
+
+document.querySelectorAll('.btn-outline-primary').forEach(button => {
+    button.addEventListener('click', () => {
+        button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...';
+        button.disabled = true;
+    });
+});
 </script>
 
 {{> footer }}
+
