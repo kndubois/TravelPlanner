@@ -139,3 +139,19 @@ padding: 15px 0;
     padding: 5px 10px;
     border-radius: 8px;
 }
+
+.trip-img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    border-bottom: 3px solid #004AAD;
+}
+
+
+.text-primary.small.fw-bold {
+    text-decoration: none;
+}
+
+.text-primary.small.fw-bold:hover {
+    text-decoration: underline;
+}
