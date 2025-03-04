@@ -154,8 +154,18 @@ router.get('/dashboard', requireLogin, (req, res) => {
         const today = new Date();
 
         trips.forEach(trip => {
+            trip.budget = formatCommas(trip.budget);
+
+            const startDate = new Date(trip.start_date);
             const endDate = new Date(trip.end_date);
+            
+            trip.start_date = formatDate(trip.start_date);
+            trip.end_date = formatDate(trip.end_date);
+
             trip.is_completed = trip.completed === 1 || endDate < today;
+            trip.duration = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
+
+            trip.destination_name = trip.destination_name || trip.destination; 
         });
 
         const ongoingTrips = trips.filter(trip => !trip.is_completed && new Date(trip.start_date) <= today && new Date(trip.end_date) >= today);
@@ -181,16 +191,13 @@ router.get('/dashboard', requireLogin, (req, res) => {
         const upcomingTripsLimited = upcomingTrips.slice(0, 3);
         const completedTripsLimited = completedTrips.slice(0, 3);
 
-        trips.forEach(trip => {
-            trip.budget = formatCommas(trip.budget);
-        });
-
         const reminders = trips
-            .filter(trip => trip.reminder && trip.reminder.trim() !== "")
-            .map(trip => ({ 
-                destination: trip.destination, 
-                start_date: formatDate(trip.start_date)
-            }));
+        .filter(trip => trip.reminder && trip.reminder.trim() !== "")
+        .map(trip => ({ 
+            destination_name: trip.destination_name || trip.destination, 
+            start_date: trip.start_date
+        }));
+    
 
         res.render('pages/dashboard', {
             trips,

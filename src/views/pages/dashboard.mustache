@@ -1,59 +1,70 @@
-{{> layout }} 
+{{> layout }}
 
-<header class="dashboard-header bg-light shadow-sm py-4">
+<header class="dashboard-header bg-primary text-white py-4">
     <div class="container d-flex justify-content-between align-items-center">
-        <h2 class="fw-bold text-dark">Welcome, {{user.username}}!</h2>
-        <a href="/add-trip" class="btn btn-primary fw-bold px-4 py-2">+ Plan New Trip</a>
+        <h2 class="fw-bold">Welcome, {{user.username}}!</h2>
+        <a href="/add-trip" class="btn btn-light fw-bold px-4 py-2">+ Plan New Trip</a>
     </div>
 </header>
 
-<section class="container mt-4">
+<!-- Next Trip Section -->
+<section class="container mt-5">
     {{#next_trip}}
-    <div class="card shadow-sm border-0 rounded-4 p-4 text-center bg-primary text-white">
-        <h3 class="fw-bold">Next Trip</h3>
-        <p class="fs-5 fw-semibold">{{destination}}</p>
-        <p class="fs-6">{{start_date}} - {{end_date}}</p>
-        <div id="countdown" class="fw-bold fs-3 mt-2"></div>
+    <div class="card shadow-sm border-0 rounded-4 p-4 bg-white">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+            <h3 class="fw-bold text-primary">Next Trip</h3>
+            <p class="text-muted small fw-semibold">{{start_date}} - {{end_date}} ({{duration}} days)</p>
+        </div>
+
+        <!-- Trip Details + Countdown -->
+        <div class="d-flex justify-content-between align-items-center border rounded-3 p-4">
+            <div>
+                <h2 class="fw-bold text-dark mb-1">{{destination_name}}</h2>
+                <p class="text-muted small">Your adventure is just around the corner!</p>
+            </div>
+            <div class="text-end">
+                <p class="fw-semibold text-muted mb-1">Time Until Departure</p>
+                <div id="countdown" class="fw-bold display-4 text-primary"></div>
+            </div>
+        </div>
     </div>
     {{/next_trip}}
 </section>
 
+
+
 <section class="container mt-5 mb-5">
     <div class="row g-4">
         <div class="col-md-8">
-            <!-- Ongoing Trips Section -->
+            <!-- Ongoing Trip Section -->
             <div class="card shadow-sm border-0">
-                <div class="card-header fw-bold d-flex justify-content-between align-items-center">
-                    <span>Ongoing Trips</span>
-                    <a href="/mytrips" class="text-primary small fw-bold">View All</a>
+                <div class="card-header bg-primary text-white fw-bold d-flex justify-content-between align-items-center">
+                    <span>Trip In Progress</span>
+                    <a href="/mytrips" class="text-white small fw-bold">View All</a>
                 </div>
                 <div class="card-body">
-                    <div class="row g-3">
-                        {{#ongoing_trips_limited}}
-                        <div class="col-md-6 col-lg-4">
-                            <div class="trip-card card border-0 shadow-sm rounded-3">
-                                <img src="/images/destination.jpg" alt="{{destination}}" class="trip-img rounded-top">
-                                <div class="card-body text-center">
-                                    <h5 class="fw-bold text-primary mb-1">{{destination}}</h5>
-                                    <p class="text-muted small">{{start_date}} • {{duration}} days</p>
-                                    <a href="/itinerary/{{id}}" class="btn btn-outline-primary btn-sm">View Itinerary</a>
-                                </div>
-                            </div>
+                    {{#ongoing_trips}}
+                    <div class="border rounded-3 p-4 mb-3 shadow-sm d-flex align-items-center justify-content-between">
+                        <div>
+                            <h4 class="fw-bold text-primary mb-1">{{destination_name}}</h4>
+                            <p class="text-muted small">{{start_date}} - {{end_date}} ({{duration}} days)</p>
                         </div>
-                        {{/ongoing_trips_limited}}
-
-                        {{^ongoing_trips_limited}}
-                        <p class="text-muted text-center">No ongoing trips.</p>
-                        {{/ongoing_trips_limited}}
+                        <a href="/itinerary/{{id}}" class="btn btn-outline-primary btn-sm">View Itinerary</a>
                     </div>
+                    {{/ongoing_trips}}
+
+                    {{^ongoing_trips}}
+                    <p class="text-muted text-center">You have no trips in progress</p>
+                    {{/ongoing_trips}}
                 </div>
             </div>
 
             <!-- Upcoming Trips Section -->
             <div class="card shadow-sm border-0 mt-4">
-                <div class="card-header fw-bold d-flex justify-content-between align-items-center">
+                <div class="card-header bg-primary text-white fw-bold d-flex justify-content-between align-items-center">
                     <span>Upcoming Trips</span>
-                    <a href="/mytrips" class="text-primary small fw-bold">View All</a>
+                    <a href="/mytrips" class="text-white small fw-bold">View All</a>
                 </div>
                 <div class="card-body">
                     <div class="row g-3">
@@ -62,8 +73,8 @@
                             <div class="trip-card card border-0 shadow-sm rounded-3">
                                 <img src="/images/destination.jpg" alt="{{destination}}" class="trip-img rounded-top">
                                 <div class="card-body text-center">
-                                    <h5 class="fw-bold text-primary mb-1">{{destination}}</h5>
-                                    <p class="text-muted small">{{start_date}} • {{duration}} days</p>
+                                    <h5 class="fw-bold text-primary mb-1">{{destination_name}}</h5>
+                                    <p class="text-muted small">{{start_date}} ({{duration}} days)</p>
                                     <a href="/itinerary/{{id}}" class="btn btn-outline-primary btn-sm">View Itinerary</a>
                                 </div>
                             </div>
@@ -71,51 +82,51 @@
                         {{/upcoming_trips_limited}}
 
                         {{^upcoming_trips_limited}}
-                        <p class="text-muted text-center">No upcoming trips planned.</p>
+                        <p class="text-muted text-center">No upcoming trips scheduled</p>
                         {{/upcoming_trips_limited}}
                     </div>
                 </div>
             </div>
         </div>
 
-
         <div class="col-md-4">
+            <!-- Reminders -->
             <div class="card shadow-sm border-0 mb-4">
-                <div class="card-header fw-bold">Reminders</div>
+                <div class="card-header bg-primary text-white fw-bold">Reminders</div>
                 <div class="card-body">
                     {{#reminders}}
-                    <p class="mb-2">
-                        <strong>{{destination}}</strong> on <strong>{{start_date}}</strong>
-                    </p>
+                    <p class="mb-2"><strong>{{start_date}}</strong> • {{destination_name}}</p>
                     {{/reminders}}
+
                     {{^reminders}}
                     <p class="text-muted text-center">No reminders set.</p>
                     {{/reminders}}
                 </div>
             </div>
 
+            <!-- Completed Trips -->
             <div class="card shadow-sm border-0 mb-4">
-                <div class="card-header fw-bold">Completed Trips</div>
+                <div class="card-header bg-primary text-white fw-bold">Completed Trips</div>
                 <div class="card-body">
-
                     {{#completed_trips}}
                     <div class="trip-entry border-bottom pb-3 mb-3 d-flex justify-content-between align-items-center">
                         <div>
-                            <h5 class="fw-bold mb-1">{{destination}}</h5>
-                            <p class="text-muted small mb-1">{{start_date}} • {{duration}} days</p>
+                            <h5 class="fw-bold text-primary mb-1">{{destination_name}}</h5>
+                            <p class="text-muted small">{{start_date}} - {{end_date}} ({{duration}} days)</p>
                         </div>
                         <a href="/itinerary/{{id}}" class="btn btn-outline-primary btn-sm">View Itinerary</a>
                     </div>
                     {{/completed_trips}}
 
                     {{^completed_trips}}
-                    <p class="text-muted text-center">No completed trips.</p>
+                    <p class="text-muted text-center">No past trips recorded</p>
                     {{/completed_trips}}
                 </div>
             </div>
 
+            <!-- Travel Stats -->
             <div class="card shadow-sm border-0">
-                <div class="card-header fw-bold">Travel Stats</div>
+                <div class="card-header bg-primary text-white fw-bold">Travel Stats</div>
                 <div class="card-body">
                     <p><strong>Total Trips:</strong> {{trip_count}}</p>
                     <p><strong>Total Budget:</strong> {{total_budget}}</p>
@@ -128,16 +139,28 @@
 
 <script>
 {{#next_trip}}
+    function startCountdown(targetDate, countdownElementId) {
+        const countDownDate = new Date(targetDate).getTime();
+
+        function updateCountdown() {
+            const now = new Date().getTime();
+            const timeLeft = countDownDate - now;
+
+            if (timeLeft <= 0) {
+                document.getElementById(countdownElementId).innerHTML = "Trip Started!";
+                return;
+            }
+
+            const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+            document.getElementById(countdownElementId).innerHTML = days + " days left";
+        }
+
+        updateCountdown();
+        setInterval(updateCountdown, 1000);
+    }
+
     startCountdown("{{start_date}}", "countdown");
 {{/next_trip}}
-
-document.querySelectorAll('.btn-outline-primary').forEach(button => {
-    button.addEventListener('click', () => {
-        button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...';
-        button.disabled = true;
-    });
-});
 </script>
 
 {{> footer }}
-

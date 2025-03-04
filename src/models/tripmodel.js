@@ -8,7 +8,11 @@ const init = () => {
         name TEXT NOT NULL,
         username TEXT UNIQUE NOT NULL,
         email TEXT UNIQUE NOT NULL,
-        password TEXT NOT NULL
+        password TEXT NOT NULL,
+        default_currency TEXT DEFAULT 'CAD',
+        timezone TEXT DEFAULT 'UTC-5',
+        theme TEXT DEFAULT 'light',
+        language TEXT DEFAULT 'en'
     )`);
 
     // Trips Table

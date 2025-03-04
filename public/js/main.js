@@ -1,8 +1,6 @@
 function startCountdown(targetDate, elementId) {
     const countdownElement = document.getElementById(elementId);
 
-    console.log("Original date received:", targetDate);
-
     targetDate = targetDate.replace(/&#x2F;/g, "/");
 
     const tripDate = new Date(targetDate);
@@ -25,13 +23,12 @@ function startCountdown(targetDate, elementId) {
         const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
 
-        countdownElement.innerHTML = `<span>${days} days ${hours} hours ${minutes} minutes</span>`;
+        countdownElement.innerHTML = `<span>${days} days • ${hours} hours • ${minutes} minutes</span>`;
     }
 
     setInterval(updateCountdown, 1000);
     updateCountdown();
 }
-
 
 
 function generateScheduleDays(startDate, endDate) {
