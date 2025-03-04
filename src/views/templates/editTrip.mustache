@@ -1,54 +1,102 @@
 {{> layout }}
 
 <div class="container mt-5 mb-4">
-    <h2 class="text-center mb-4">Edit Trip</h2>
-    <form action="/edit/{{trip.id}}" method="POST">
-        <div class="mb-3">
-            <label for="destination" class="form-label">Destination</label>
-            <input type="text" class="form-control" id="destination" name="destination" value="{{trip.destination}}" required>
-        </div>
-        <div class="mb-3">
-            <label for="start_date" class="form-label">Start Date</label>
-            <input type="date" class="form-control" id="start_date" name="start_date" value="{{trip.start_date}}" required>
-        </div>
-        <div class="mb-3">
-            <label for="end_date" class="form-label">End Date</label>
-            <input type="date" class="form-control" id="end_date" name="end_date" value="{{trip.end_date}}" required>
-        </div>
-        <div class="mb-3">
-            <label for="budget" class="form-label">Budget ($)</label>
-            <input type="number" class="form-control" id="budget" name="budget" value="{{trip.budget}}" required>
-        </div>
-        <div class="mb-3">
-            <label for="priority" class="form-label">Priority</label>
-            <select class="form-select" id="priority" name="priority">
-                <option value="High" {{#trip.priority}}selected{{/trip.priority}}>High</option>
-                <option value="Medium" {{#trip.priority}}selected{{/trip.priority}}>Medium</option>
-                <option value="Low" {{#trip.priority}}selected{{/trip.priority}}>Low</option>
-            </select>
-        </div>
-        <div class="mb-3">
-            <label for="category" class="form-label">Category</label>
-            <input type="text" class="form-control" id="category" name="category" value="{{trip.category}}">
-        </div>
-        <div class="mb-3">
-            <label for="color" class="form-label">Color Code</label>
-            <input type="text" class="form-control" id="color" name="color" value="{{trip.color}}">
-        </div>
-        <div class="mb-3">
-            <label for="notes" class="form-label">Notes</label>
-            <textarea class="form-control" id="notes" name="notes" rows="2">{{trip.notes}}</textarea>
-        </div>
-        <div class="mb-3">
-            <label for="reminder" class="form-label">Enable Reminder?</label>
-            <input type="checkbox" id="reminder" name="reminder" {{#trip.reminder}}checked{{/trip.reminder}}>
-            <!--<label for="reminder">Enable Reminder</label>-->
-        </div>
-        <div class="text-center">
-            <button type="submit" class="btn btn-primary">Save Changes</button>
-            <a href="/mytrips" class="btn btn-secondary">Cancel</a>
-        </div>
-    </form>
+    <div class="text-center mb-4">
+        <h2 class="fw-bold text-primary">Edit Trip</h2>
+        <p class="text-muted">Update your trip details.</p>
+    </div>
+
+    {{#success}}
+    <div class="alert alert-success text-center" id="success-message">Trip updated successfully!</div>
+    {{/success}}
+
+    {{#error}}
+    <div class="alert alert-danger text-center">Error updating trip. Please try again.</div>
+    {{/error}}
+
+
+    <div class="card shadow-sm border-0 rounded-4 p-4">
+        <form action="/edit/{{trip.id}}?from={{from}}" method="POST">
+
+            <input type="hidden" name="from" value="{{from}}">
+            
+            <!-- Trip Name & Destination -->
+            <div class="row g-4 mb-3">
+                <div class="col-md-6">
+                    <label for="destination_name" class="form-label fw-semibold">Trip Name</label>
+                    <input type="text" class="form-control" id="destination_name" name="destination_name" value="{{trip.destination_name}}" placeholder="E.g. Graduation Trip">
+                </div>
+                <div class="col-md-6">
+                    <label for="destination" class="form-label fw-semibold">Destination</label>
+                    <input type="text" class="form-control" id="destination" name="destination" value="{{trip.destination}}" required>
+                </div>
+            </div>
+
+            <!-- Dates & Budget -->
+            <div class="row g-4 mb-3">
+                <div class="col-md-4">
+                    <label for="start_date" class="form-label fw-semibold">Start Date</label>
+                    <input type="date" class="form-control" id="start_date" name="start_date" value="{{trip.start_date}}" required>
+                </div>
+                <div class="col-md-4">
+                    <label for="end_date" class="form-label fw-semibold">End Date</label>
+                    <input type="date" class="form-control" id="end_date" name="end_date" value="{{trip.end_date}}" required>
+                </div>
+                <div class="col-md-4">
+                    <label for="budget" class="form-label fw-semibold">Budget ($)</label>
+                    <input type="number" class="form-control" id="budget" name="budget" value="{{trip.budget}}" required>
+                </div>
+            </div>
+
+            <!-- Priority & Category -->
+            <div class="row g-4 mb-3">
+                <div class="col-md-6">
+                    <label for="priority" class="form-label fw-semibold">Priority</label>
+                    <select class="form-select" id="priority" name="priority">
+                        <option value="High" {{#trip.priority}}selected{{/trip.priority}}>High</option>
+                        <option value="Medium" {{#trip.priority}}selected{{/trip.priority}}>Medium</option>
+                        <option value="Low" {{#trip.priority}}selected{{/trip.priority}}>Low</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label for="category" class="form-label fw-semibold">Category</label>
+                    <input type="text" class="form-control" id="category" name="category" value="{{trip.category}}" placeholder="E.g. Family, Adventure">
+                </div>
+            </div>
+
+            <!-- Notes -->
+            <div class="mb-3">
+                <label for="notes" class="form-label fw-semibold">Notes</label>
+                <textarea class="form-control" id="notes" name="notes" rows="2" placeholder="Additional details about the trip...">{{trip.notes}}</textarea>
+            </div>
+
+            <!-- Reminder Checkbox -->
+            <div class="form-check mb-4">
+                <input class="form-check-input" type="checkbox" id="reminder" name="reminder" {{#trip.reminder}}checked{{/trip.reminder}}>
+                <label class="form-check-label fw-semibold" for="reminder">Enable Reminder</label>
+            </div>
+
+            <!-- Buttons -->
+            <div class="text-center mt-4">
+                <button type="submit" class="btn btn-primary btn-lg fw-bold px-4">
+                    <i class="bi bi-check-lg"></i> Save Changes
+                </button>
+
+                {{#from_mytrips}}
+                <a href="/mytrips" class="btn btn-outline-secondary btn-lg px-4">
+                    <i class="bi bi-arrow-left"></i> Back to My Trips
+                </a>
+                {{/from_mytrips}}
+
+                {{#from_itinerary}}
+                <a href="/itinerary/{{trip.id}}" class="btn btn-outline-secondary btn-lg px-4">
+                    <i class="bi bi-arrow-left"></i> Back to Itinerary
+                </a>
+                {{/from_itinerary}}
+            </div>
+
+        </form>
+    </div>
 </div>
 
 {{> footer }}

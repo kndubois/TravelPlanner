@@ -60,23 +60,23 @@ function generateScheduleDays(startDate, endDate) {
 }
 
 function toggleAddSchedule() {
-    document.getElementById("add-schedule-form").classList.toggle("d-none");
+    let form = document.getElementById("add-schedule-form");
+    if (form) form.classList.toggle("d-none");
 }
 
 
 function submitNewSchedule(event, tripId) {
     event.preventDefault();
     
-    if (!tripId) {
-        console.error("Trip ID is missing in function call.");
-        alert("Error: Trip ID is missing.");
-        return;
-    }
-
+    
     let date = document.getElementById("new-schedule-date").value;
     let activities = document.getElementById("new-schedule-activities").value;
 
-    console.log("Submitting Schedule:", { tripId, date, activities });
+    if (!tripId) {
+        console.error("Trip ID is missing.");
+        alert("Error: Trip ID is missing.");
+        return;
+    }
 
     fetch(`/itinerary/${tripId}/add-schedule`, {
         method: "POST",
@@ -85,18 +85,17 @@ function submitNewSchedule(event, tripId) {
     })
     .then(response => response.json())
     .then(data => {
-        console.log("Server response:", data);
 
         if (data.success) {
-            document.getElementById("schedule-list").innerHTML += `
-                <div class="border-bottom py-2 d-flex justify-content-between">
-                    <div>
-                        <p class="fw-semibold mb-1">${date}</p>
-                        <p class="text-muted small">${activities}</p>
-                    </div>
+            document.getElementById("schedule-list");
+            let list = document.getElementById("schedule-list");
+            list.innerHTML += `
+                <div class="border rounded-3 p-3 mb-2 shadow-sm">
+                    <p class="fw-semibold text-primary mb-1">${date}</p>
+                    <p class="text-muted small">${activities}</p>
                 </div>
             `;
-            document.getElementById("add-schedule-form").classList.add("d-none");
+            toggleAddSchedule();
         } else {
             alert("Failed to add schedule: " + data.message);
         }
@@ -174,16 +173,7 @@ function updateSchedule(event, scheduleId, tripId) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ date, activities })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            location.reload(); // Refresh page after update
-        } else {
-            alert("Failed to update schedule.");
-        }
-    })
-    .catch(err => console.error("Error:", err));
+    }).then(() => location.reload());
 }
 
 // Delete a schedule item
@@ -209,7 +199,8 @@ function deleteSchedule(scheduleId, tripId) {
 
 
 function toggleAddBooking() {
-    document.getElementById("add-booking-form").classList.toggle("d-none");
+    let form = document.getElementById("add-booking-form");
+    if (form) form.classList.toggle("d-none");
 }
 
 // Toggle edit form visibility for bookings
@@ -221,7 +212,6 @@ function toggleEditBooking(bookingId) {
 function submitNewBooking(event) {
     event.preventDefault();
 
-    // Get the trip ID from the hidden input
     let tripId = document.getElementById("trip-id").value;
     let type = document.getElementById("new-booking-type").value;
     let details = document.getElementById("new-booking-details").value;
@@ -232,8 +222,6 @@ function submitNewBooking(event) {
         return;
     }
 
-    console.log("Submitting Booking:", { tripId, type, details });
-
     fetch(`/itinerary/${tripId}/add-booking`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -241,27 +229,16 @@ function submitNewBooking(event) {
     })
     .then(response => response.json())
     .then(data => {
-        console.log("Server response:", data);
 
         if (data.success) {
-            document.getElementById("booking-list").innerHTML += `
-                <div class="booking-item border rounded-3 p-3 mb-2 shadow-sm" id="booking-${data.id}">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <p class="fw-semibold mb-1 text-primary">${type}</p>
-                            <p class="text-muted small">${details}</p>
-                        </div>
-                        <div>
-                            <button class="btn btn-sm btn-outline-secondary" onclick="toggleEditBooking('${data.id}')">Edit</button>
-                            <button class="btn btn-sm btn-outline-danger" onclick="deleteBooking('${data.id}', '${tripId}')">Delete</button>
-                        </div>
-                    </div>
+            let list = document.getElementById("booking-list");
+            list.innerHTML += `
+                <div class="border rounded-3 p-3 mb-2 shadow-sm">
+                    <p class="fw-semibold text-primary mb-1">${type}</p>
+                    <p class="text-muted small">${details}</p>
                 </div>
             `;
-
-            document.getElementById("add-booking-form").classList.add("d-none");
-            document.getElementById("new-booking-type").value = "";
-            document.getElementById("new-booking-details").value = "";
+            toggleAddBooking();
         } else {
             alert("Failed to add booking.");
         }
@@ -284,16 +261,7 @@ function updateBooking(event, bookingId, tripId) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ type, details })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            location.reload(); // Refresh page after update
-        } else {
-            alert("Failed to update booking.");
-        }
-    })
-    .catch(err => console.error("Error:", err));
+    }).then(() => location.reload());
 }
 
 // Delete a booking item

@@ -219,8 +219,10 @@ router.get('/mytrips', requireLogin, (req, res) => {
         category: req.query.category || null,
         budget: req.query.budget || null,
         start_date: req.query.start_date || null,
-        end_date: req.query.end_date || null
+        end_date: req.query.end_date || null,
+        status: req.query.status || null
     };
+    
 
     tripModel.getFilteredTrips(filters, (trips) => {
         const today = new Date();
@@ -231,11 +233,22 @@ router.get('/mytrips', requireLogin, (req, res) => {
         
             trip.start_date = formatDate(trip.start_date);
             trip.end_date = formatDate(trip.end_date);
+            trip.destination_name = trip.destination_name || trip.destination; 
         
             trip.is_completed = trip.completed === 1 || endDate < today;
-        
             trip.is_ongoing = !trip.is_completed && startDate <= today && endDate >= today;
             trip.is_upcoming = !trip.is_completed && startDate > today;
+
+            if (filters.status) {
+                if (filters.status === "ongoing" && !trip.is_ongoing) return false;
+                if (filters.status === "upcoming" && !trip.is_upcoming) return false;
+                if (filters.status === "completed" && !trip.is_completed) return false;
+            }
+
+            if (filters.start_date && startDate.getTime() !== new Date(filters.start_date).getTime()) return false;
+            if (filters.end_date && endDate.getTime() !== new Date(filters.end_date).getTime()) return false;
+
+            return true;
         });
         
 
@@ -258,7 +271,7 @@ router.get('/add-trip', requireLogin, (req, res) => {
 // POST create a new trip
 router.post('/add', requireLogin, (req, res) => {
     const user_id = req.session.user.id; // Get logged-in user ID
-    let { destination, start_date, end_date, budget, notes, reminder, priority, category, color } = req.body;
+    let { destination, start_date, end_date, budget, notes, reminder, priority, category } = req.body;
 
 
     if (!destination || destination.length < 3 || budget <= 0) {
@@ -269,11 +282,7 @@ router.post('/add', requireLogin, (req, res) => {
         return res.status(400).send("Error: End date cannot be before start date.");
     }
 
-    if (!color) {
-        color = "#007BFF";  // Default blue color 
-    }
-    
-    tripModel.addTrip({ destination, start_date, end_date, budget, notes, reminder, priority, category, color }, user_id, () => {
+    tripModel.addTrip({ destination, start_date, end_date, budget, notes, reminder, priority, category }, user_id, () => {
         res.redirect('/mytrips');
     });
 });
@@ -307,10 +316,12 @@ router.get('/itinerary/:id', requireLogin, (req, res) => {
                 const itineraryData = {
                     id: trip.id,
                     destination: trip.destination,
+                    destination_name: trip.destination_name || trip.destination,
                     start_date: formatDate(trip.start_date),
                     end_date: formatDate(trip.end_date),
                     duration: Math.ceil((new Date(trip.end_date) - new Date(trip.start_date)) / (1000 * 60 * 60 * 24)),
                     budget: formatCommas(trip.budget),
+                    category: trip.category || "Uncategorized",
                     priority: trip.priority,
                     notes: trip.notes || "",
                     reminder: trip.reminder || "No reminder set.",
@@ -340,6 +351,7 @@ router.post('/itinerary/:id/add-schedule', requireLogin, (req, res) => {
         res.json({ success: true, message: "Schedule added successfully." });
     });
 });
+
 
 router.post('/itinerary/:id/edit-schedule/:scheduleId', requireLogin, (req, res) => {
     const { scheduleId } = req.params;
@@ -424,24 +436,36 @@ router.post('/itinerary/:id/edit-task/:taskId', requireLogin, (req, res) => {
 // GET Edit Trip Page
 router.get('/edit/:id', requireLogin, (req, res) => {
     const id = req.params.id;
+    const success = req.query.success === "true";
+    const error = req.query.error === "true";
+    const from = req.query.from || "";
+    const from_itinerary = req.query.from === "itinerary";
+    const from_mytrips = req.query.from === "mytrips";
+
     tripModel.getTripById(id, (trip) => {
         if (!trip) {
             return res.status(404).send("Trip not found");
         }
-        res.render('templates/editTrip', { trip, user: req.session.user });
+        res.render('templates/editTrip', { trip, success, error, from_itinerary, from_mytrips, from, user: req.session.user });
     });
 });
 
 
-// POST Update Trip
 router.post('/edit/:id', requireLogin, (req, res) => {
     const id = req.params.id;
-    const { destination, start_date, end_date, budget, notes, reminder, priority, category, color } = req.body;
+    const { destination_name, destination, start_date, end_date, budget, notes, reminder, priority, category } = req.body;
+    const from = req.query.from || req.body.from || ""; 
 
-    tripModel.updateTrip(id, { destination, start_date, end_date, budget, notes, reminder, priority, category, color }, () => {
-        res.redirect('/mytrips');
+    tripModel.updateTrip(id, { destination_name, destination, start_date, end_date, budget, notes, reminder, priority, category }, (err) => {
+        if (err) {
+            return res.redirect(`/edit/${id}?error=true&from=${from}`);
+        }
+        res.redirect(`/edit/${id}?success=true&from=${from}`);
     });
 });
+
+
+
 
 // POST mark a trip as completed
 router.post('/complete/:id', requireLogin, (req, res) => {
@@ -490,13 +514,6 @@ router.get('/priority', (req, res) => {
     });
 });
 
-// GET trips by color
-router.get('/color/:color', (req, res) => {
-    const color = req.params.color;
-    tripModel.getTripsByColor(color, (trips) => {
-        res.render('index', { trips });
-    });
-});
 
 // GET Explore Page
 router.get('/explore', requireLogin, (req, res) => {
@@ -513,14 +530,32 @@ router.get('/explore', requireLogin, (req, res) => {
 });
 
 // GET Settings Page
+
 router.get('/settings', requireLogin, (req, res) => {
-    res.render('pages/settings', { user: req.session.user });
+    tripModel.getUserById(req.session.user.id, (user) => {
+        if (!user) return res.redirect('/login');
+        res.render('pages/settings', { user: req.session.user });
+    });
 });
 
 // POST Update Settings
-router.post('/update-settings', requireLogin, (req, res) => {
-    const { default_currency, notification_pref, theme } = req.body;
-    res.redirect('/settings');
+router.post('/update-settings', requireLogin, async (req, res) => {
+    const userId = req.session.user.id;
+    const { name, username, email, password, default_currency, timezone, theme, language } = req.body;
+
+    let hashedPassword = null;
+    if (password) {
+        const saltRounds = 10;
+        hashedPassword = await bcrypt.hash(password, Number(saltRounds));
+    }
+
+    tripModel.updateUser(userId, { name, username, email, hashedPassword, default_currency, timezone, theme, language }, (err) => {
+        if (err) return res.redirect('/settings?error=true');
+
+        req.session.user.username = username;
+
+        res.redirect('/settings?success=true');
+    });
 });
 
 

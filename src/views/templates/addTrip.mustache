@@ -1,86 +1,112 @@
 {{> layout }}
 
 <div class="container mt-5 mb-5">
-    <div class="text-center mb-5">
+    <div class="text-center mb-4">
         <h1 class="fw-bold text-primary">Plan a New Trip</h1>
-        <p class="text-muted">Customize your travel plans and set your itinerary.</p>
+        <p class="text-muted">Customize your travel plans and set your itinerary</p>
     </div>
 
     <div class="card shadow-sm border-0 rounded-4 p-4">
         <form action="/add" method="POST">
-            <div class="row g-4">
-                <div class="col-md-6">
-                    <label for="destination" class="form-label fw-semibold">Destination</label>
-                    <input type="text" class="form-control" id="destination" name="destination" value="{{destination}}" required>
-                </div>
 
-                <div class="col-md-3">
-                    <label for="start_date" class="form-label fw-semibold">Start Date</label>
-                    <input type="date" class="form-control" id="start_date" name="start_date" required>
-                </div>
-                <div class="col-md-3">
-                    <label for="end_date" class="form-label fw-semibold">End Date</label>
-                    <input type="date" class="form-control" id="end_date" name="end_date" required>
+            <!-- Trip Details Section -->
+            <div class="mb-4">
+                <h5 class="fw-bold text-primary"><i class="bi bi-map"></i> Trip Details</h5>
+                <div class="row g-4 mt-2">
+                    <div class="col-md-6">
+                        <label for="destination_name" class="form-label fw-semibold">Trip Name</label>
+                        <input type="text" class="form-control" id="destination_name" name="destination_name" value="{{destination_name}}" placeholder="E.g. Summer Getaway" required>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="destination" class="form-label fw-semibold">Destination</label>
+                        <input type="text" class="form-control" id="destination" name="destination" value="{{destination}}" placeholder="E.g. Paris, France" required>
+                    </div>
                 </div>
             </div>
 
-            <div class="row g-4 mt-3">
-                <div class="col-md-4">
-                    <label for="budget" class="form-label fw-semibold">Budget ($)</label>
-                    <input type="number" class="form-control" id="budget" name="budget" required>
-                </div>
-
-                <div class="col-md-4">
-                    <label for="priority" class="form-label fw-semibold">Priority</label>
-                    <select class="form-select" id="priority" name="priority">
-                        <option value="High">High</option>
-                        <option value="Medium">Medium</option>
-                        <option value="Low">Low</option>
-                    </select>
-                </div>
-
-                <div class="col-md-4">
-                    <label for="category" class="form-label fw-semibold">Category</label>
-                    <input type="text" class="form-control" id="category" name="category">
+            <!-- Date & Budget Section -->
+            <div class="mb-4">
+                <h5 class="fw-bold text-primary"><i class="bi bi-calendar-check"></i> Dates & Budget</h5>
+                <div class="row g-4 mt-2">
+                    <div class="col-md-4">
+                        <label for="start_date" class="form-label fw-semibold">Start Date</label>
+                        <input type="date" class="form-control" id="start_date" name="start_date" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="end_date" class="form-label fw-semibold">End Date</label>
+                        <input type="date" class="form-control" id="end_date" name="end_date" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="budget" class="form-label fw-semibold">Budget ($)</label>
+                        <input type="number" class="form-control" id="budget" name="budget" required>
+                    </div>
                 </div>
             </div>
 
-            <div class="row g-4 mt-3">
-                <div class="col-md-6">
-                    <label for="transportation" class="form-label fw-semibold">Mode of Transportation</label>
-                    <select class="form-select" id="transportation" name="transportation">
-                        <option value="Plane">Plane</option>
-                        <option value="Train">Train</option>
-                        <option value="Car">Car</option>
-                        <option value="Boat">Boat</option>
-                        <option value="Other">Other</option>
-                    </select>
-                </div>
-                <div class="col-md-6">
-                    <label for="accommodation" class="form-label fw-semibold">Accommodation Type</label>
-                    <select class="form-select" id="accommodation" name="accommodation">
-                        <option value="Hotel">Hotel</option>
-                        <option value="Hostel">Hostel</option>
-                        <option value="Airbnb">Airbnb</option>
-                        <option value="Camping">Camping</option>
-                        <option value="Other">Other</option>
-                    </select>
+            <!-- Priority & Category Section -->
+            <div class="mb-4">
+                <h5 class="fw-bold text-primary"><i class="bi bi-star"></i> Trip Preferences</h5>
+                <div class="row g-4 mt-2">
+                    <div class="col-md-6">
+                        <label for="priority" class="form-label fw-semibold">Priority</label>
+                        <select class="form-select" id="priority" name="priority">
+                            <option value="High">High</option>
+                            <option value="Medium">Medium</option>
+                            <option value="Low">Low</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="category" class="form-label fw-semibold">Category</label>
+                        <input type="text" class="form-control" id="category" name="category" placeholder="E.g. Adventure, Relaxation">
+                    </div>
                 </div>
             </div>
 
-            <div class="mt-3">
-                <label for="notes" class="form-label fw-semibold">Notes</label>
+            <!-- Transportation & Accommodation Section -->
+            <div class="mb-4">
+                <h5 class="fw-bold text-primary"><i class="bi bi-car-front"></i> Travel & Stay</h5>
+                <div class="row g-4 mt-2">
+                    <div class="col-md-6">
+                        <label for="transportation" class="form-label fw-semibold">Mode of Transportation</label>
+                        <select class="form-select" id="transportation" name="transportation">
+                            <option value="Plane">Plane</option>
+                            <option value="Train">Train</option>
+                            <option value="Car">Car</option>
+                            <option value="Boat">Boat</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="accommodation" class="form-label fw-semibold">Accommodation Type</label>
+                        <select class="form-select" id="accommodation" name="accommodation">
+                            <option value="Hotel">Hotel</option>
+                            <option value="Hostel">Hostel</option>
+                            <option value="Airbnb">Airbnb</option>
+                            <option value="Camping">Camping</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notes Section -->
+            <div class="mb-4">
+                <h5 class="fw-bold text-primary"><i class="bi bi-pencil"></i> Notes</h5>
                 <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Add any important details about your trip..."></textarea>
             </div>
 
-            <div class="form-check mt-3">
+            <!-- Reminder Checkbox -->
+            <div class="form-check mb-4">
                 <input class="form-check-input" type="checkbox" id="reminder" name="reminder">
                 <label class="form-check-label fw-semibold" for="reminder">Enable Reminder</label>
             </div>
 
+            <!-- Submit Buttons -->
             <div class="text-center mt-4">
-                <button type="submit" class="btn btn-primary btn-lg fw-bold px-4">Save Trip</button>
-                <a href="/mytrips" class="btn btn-outline-secondary btn-lg px-4">Cancel</a>
+                <button type="submit" class="btn btn-primary btn-lg fw-bold px-4"><i class="bi bi-check-lg"></i> Save Trip</button>
+                <a href="/mytrips" class="btn btn-outline-secondary btn-lg px-4"><i class="bi bi-x-lg"></i> Cancel</a>
             </div>
         </form>
     </div>
