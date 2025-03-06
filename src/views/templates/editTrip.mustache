@@ -1,6 +1,6 @@
-{{> layout }}
+{{> layout }} 
 
-<div class="container mt-5 mb-4">
+<div class="container mt-5 mb-5">
     <div class="text-center mb-4">
         <h2 class="fw-bold text-primary">Edit Trip</h2>
         <p class="text-muted">Update your trip details.</p>
@@ -14,12 +14,11 @@
     <div class="alert alert-danger text-center">Error updating trip. Please try again.</div>
     {{/error}}
 
-
     <div class="card shadow-sm border-0 rounded-4 p-4">
         <form action="/edit/{{trip.id}}?from={{from}}" method="POST">
 
             <input type="hidden" name="from" value="{{from}}">
-            
+
             <!-- Trip Name & Destination -->
             <div class="row g-4 mb-3">
                 <div class="col-md-6">
@@ -64,8 +63,34 @@
                 </div>
             </div>
 
-            <!-- Notes -->
-            <div class="mb-3">
+            <!-- Transportation & Accommodation -->
+            <div class="row g-4 mb-3">
+                <div class="col-md-6">
+                    <label for="transportation" class="form-label fw-semibold">Mode of Transportation</label>
+                    <select id="transportation" name="transportation" class="form-select">
+                        <option value="Plane" {{#isPlane}}selected{{/isPlane}}>Plane</option>
+                        <option value="Train" {{#isTrain}}selected{{/isTrain}}>Train</option>
+                        <option value="Car" {{#isCar}}selected{{/isCar}}>Car</option>
+                        <option value="Bus" {{#isBus}}selected{{/isBus}}>Bus</option>
+                        <option value="Other" {{#isOtherTransport}}selected{{/isOtherTransport}}>Other</option>
+                    </select>
+
+                </div>
+                <div class="col-md-6">
+                    <label for="accommodation" class="form-label fw-semibold">Accommodation Type</label>
+                    <select id="accommodation" name="accommodation" class="form-select">
+                        <option value="Hotel" {{#isHotel}}selected{{/isHotel}}>Hotel</option>
+                        <option value="Hostel" {{#isHostel}}selected{{/isHostel}}>Hostel</option>
+                        <option value="Apartment" {{#isApartment}}selected{{/isApartment}}>Apartment</option>
+                        <option value="Camping" {{#isCamping}}selected{{/isCamping}}>Camping</option>
+                        <option value="Other" {{#isOtherAccommodation}}selected{{/isOtherAccommodation}}>Other</option>
+                    </select>
+
+                </div>
+            </div>
+
+            <!-- Notes Section -->
+            <div class="mb-4">
                 <label for="notes" class="form-label fw-semibold">Notes</label>
                 <textarea class="form-control" id="notes" name="notes" rows="2" placeholder="Additional details about the trip...">{{trip.notes}}</textarea>
             </div>

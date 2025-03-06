@@ -27,6 +27,11 @@ app.use(session({
     saveUninitialized: false
 }));
 
+app.use((req, res, next) => {
+    res.locals.equals = (a, b, options) => (a === b ? options.fn(this) : options.inverse(this));
+    next();
+});
+
 app.use('/', tripController);
 
 const PORT = 3000;

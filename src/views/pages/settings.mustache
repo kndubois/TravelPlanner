@@ -4,26 +4,25 @@
     <h2 class="text-center fw-bold text-primary">Settings</h2>
     <p class="text-center text-muted">Manage your account details and preferences</p>
 
-
     <div class="card shadow-sm border-0 rounded-4 p-4 mt-4">
         <form action="/update-settings" method="POST">
             <!-- Account Settings -->
             <h5 class="fw-bold text-primary mb-3">Account Details</h5>
             <div class="row g-3">
                 <div class="col-md-6">
-                    <label for="name" class="form-label">Full Name</label>
+                    <label for="name" class="form-label fw-bold">Full Name</label>
                     <input type="text" class="form-control" id="name" name="name" value="{{user.name}}" required>
                 </div>
                 <div class="col-md-6">
-                    <label for="username" class="form-label">Username</label>
+                    <label for="username" class="form-label fw-bold">Username</label>
                     <input type="text" class="form-control" id="username" name="username" value="{{user.username}}" required>
                 </div>
                 <div class="col-md-6">
-                    <label for="email" class="form-label">Email</label>
+                    <label for="email" class="form-label fw-bold">Email</label>
                     <input type="email" class="form-control" id="email" name="email" value="{{user.email}}" required>
                 </div>
                 <div class="col-md-6">
-                    <label for="password" class="form-label">New Password</label>
+                    <label for="password" class="form-label fw-bold">New Password</label>
                     <input type="password" class="form-control" id="password" name="password" placeholder="Leave blank to keep current password">
                 </div>
             </div>
@@ -32,7 +31,7 @@
             <h5 class="fw-bold text-primary mt-4">General Preferences</h5>
             <div class="row g-3">
                 <div class="col-md-6">
-                    <label for="default_currency" class="form-label">Default Currency</label>
+                    <label for="default_currency" class="form-label fw-bold">Default Currency</label>
                     <select class="form-select" id="default_currency" name="default_currency">
                         <option value="CAD" {{#user.default_currency}}selected{{/user.default_currency}}>CAD - Canadian Dollar</option>
                         <option value="USD">USD - US Dollar</option>
@@ -41,7 +40,7 @@
                     </select>
                 </div>
                 <div class="col-md-6">
-                    <label for="timezone" class="form-label">Timezone</label>
+                    <label for="timezone" class="form-label fw-bold">Timezone</label>
                     <select class="form-select" id="timezone" name="timezone">
                         <option value="UTC-5" {{#user.timezone}}selected{{/user.timezone}}>Eastern Time (UTC-5)</option>
                         <option value="UTC-6">Central Time (UTC-6)</option>
@@ -55,14 +54,14 @@
             <h5 class="fw-bold text-primary mt-4">Appearance</h5>
             <div class="row g-3">
                 <div class="col-md-6">
-                    <label for="theme" class="form-label">Theme</label>
+                    <label for="theme" class="form-label fw-bold">Theme</label>
                     <select class="form-select" id="theme" name="theme">
                         <option value="light" {{#user.theme}}selected{{/user.theme}}>Light</option>
                         <option value="dark">Dark</option>
                     </select>
                 </div>
                 <div class="col-md-6">
-                    <label for="language" class="form-label">Language</label>
+                    <label for="language" class="form-label fw-bold">Language</label>
                     <select class="form-select" id="language" name="language">
                         <option value="en" {{#user.language}}selected{{/user.language}}>English</option>
                         <option value="fr">French</option>

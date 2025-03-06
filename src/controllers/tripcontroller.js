@@ -26,6 +26,8 @@ const requireLogin = (req, res, next) => {
     next();
 };
 
+const formatCommas = (number) => { return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'CAD' }).format(number); };
+
 
 // Middleware to check authentication
 const requireAuth = (req, res, next) => {
@@ -44,13 +46,6 @@ router.get('/', (req, res) => {
 router.get('/signup', (req, res) => {
     res.render('pages/signup', { isSignupPage: true, isLoginPage: false, isHomepage: false, user: req.session.user });
 });
-
-
-// GET Sign In Page
-router.get('/login', (req, res) => {
-    res.render('pages/login', { isLoginPage: true, isSignupPage: false, isHomepage: false, user: req.session.user });
-});
-
 
 router.post('/signup', async (req, res) => {
     try {
@@ -93,6 +88,12 @@ router.post('/signup', async (req, res) => {
 });
 
 
+// GET Sign In Page
+router.get('/login', (req, res) => {
+    res.render('pages/login', { isLoginPage: true, isSignupPage: false, isHomepage: false, user: req.session.user });
+});
+
+
 // POST Register
 router.post('/login', (req, res) => {
     const { email, password } = req.body;
@@ -111,8 +112,6 @@ router.post('/login', (req, res) => {
 });
 
 
-
-// Render Login Page
 router.get('/login', (req, res) => {
     res.render('login');
 });
@@ -129,8 +128,6 @@ router.post('/login', async (req, res) => {
         res.redirect('/dashboard');
     });
 });
-
-
 
 // logout
 router.get('/logout', (req, res) => {
@@ -166,6 +163,10 @@ router.get('/dashboard', requireLogin, (req, res) => {
             trip.duration = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
 
             trip.destination_name = trip.destination_name || trip.destination; 
+
+            if (trip.is_completed) {
+                trip.old_duration = oldDuration(trip.end_date);
+            }
         });
 
         const ongoingTrips = trips.filter(trip => !trip.is_completed && new Date(trip.start_date) <= today && new Date(trip.end_date) >= today);
@@ -182,9 +183,10 @@ router.get('/dashboard', requireLogin, (req, res) => {
             trip.end_date = formatDate(trip.end_date);
         });
 
-        completedTrips.forEach(trip => {
+        completedTrips.forEach((trip, index) => {
             trip.start_date = formatDate(trip.start_date);
             trip.end_date = formatDate(trip.end_date);
+            trip.last = index === completedTrips.length - 1;
         });
 
         const ongoingTripsLimited = ongoingTrips.slice(0, 3);
@@ -217,6 +219,13 @@ router.get('/dashboard', requireLogin, (req, res) => {
     });
 });
 
+
+const oldDuration = (dateString) => {
+    const endDate = new Date(dateString);
+    const today = new Date();
+    const timeDiff = today - endDate;
+    return Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+};
 
 
 // GET My Trips Page with Filters
@@ -278,7 +287,7 @@ router.get('/add-trip', requireLogin, (req, res) => {
 // POST create a new trip
 router.post('/add', requireLogin, (req, res) => {
     const user_id = req.session.user.id; // Get logged-in user ID
-    let { destination, start_date, end_date, budget, notes, reminder, priority, category } = req.body;
+    let { destination, start_date, end_date, budget, notes, reminder, priority, category, transportation, accommodation } = req.body;
 
 
     if (!destination || destination.length < 3 || budget <= 0) {
@@ -289,58 +298,66 @@ router.post('/add', requireLogin, (req, res) => {
         return res.status(400).send("Error: End date cannot be before start date.");
     }
 
-    tripModel.addTrip({ destination, start_date, end_date, budget, notes, reminder, priority, category }, user_id, () => {
+    tripModel.addTrip({ destination, start_date, end_date, budget, notes, reminder, priority, category, transportation, accommodation }, user_id, () => {
         res.redirect('/mytrips');
     });
 });
 
 
-const formatCommas = (number) => { return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'CAD' }).format(number); };
 
 // GET Itinerary Page
 router.get('/itinerary/:id', requireLogin, (req, res) => {
-    const tripId = req.params.id;
+
+    const tripId = parseInt(req.params.id, 10);
 
     tripModel.getTripById(tripId, (trip) => {
         if (!trip) {
             return res.status(404).send("Trip not found");
         }
 
-        // Fetch schedule data for the trip
-        tripModel.getScheduleByTripId(tripId, (schedule) => {
-            trip.schedule = schedule || []; 
+        tripModel.getExpensesByTripId(tripId, (expenses) => {
 
-            // Format schedule dates
-            trip.schedule = trip.schedule.map(item => ({
-                ...item,
-                formatted_date: formatDate(item.date)  
-            }));
+            trip.expenses = expenses || [];
 
-            // Fetch bookings data
-            tripModel.getBookingsByTripId(tripId, (bookings) => {
-                trip.bookings = bookings || [];  
+            trip.total_spent = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+            trip.remaining_budget = trip.budget - trip.total_spent;
 
-                const itineraryData = {
-                    id: trip.id,
-                    destination: trip.destination,
-                    destination_name: trip.destination_name || trip.destination,
-                    start_date: formatDate(trip.start_date),
-                    end_date: formatDate(trip.end_date),
-                    duration: Math.ceil((new Date(trip.end_date) - new Date(trip.start_date)) / (1000 * 60 * 60 * 24)),
-                    budget: formatCommas(trip.budget),
-                    category: trip.category || "Uncategorized",
-                    priority: trip.priority,
-                    notes: trip.notes || "",
-                    reminder: trip.reminder || "No reminder set.",
-                    total_spent: formatCommas(trip.total_spent || 0),
-                    remaining_budget: formatCommas(trip.budget - (trip.total_spent || 0)),
-                    schedule: trip.schedule || [],
-                    bookings: trip.bookings || [],
-                    tasks: [...(trip.packing_list || []), ...(trip.todo_list || [])],
-                    user: req.session.user
-                };
+            tripModel.getScheduleByTripId(tripId, (schedule) => {
+                trip.schedule = schedule || []; 
+                trip.schedule = trip.schedule.map(item => ({
+                    ...item,
+                    formatted_date: formatDate(item.date)  
+                }));
 
-                res.render('pages/itinerary', itineraryData);
+                // Fetch bookings data
+                tripModel.getBookingsByTripId(tripId, (bookings) => {
+                    trip.bookings = bookings || [];  
+
+                    const itineraryData = {
+                        id: trip.id,
+                        trip_id: trip.id,
+                        destination: trip.destination,
+                        destination_name: trip.destination_name || trip.destination,
+                        start_date: formatDate(trip.start_date),
+                        end_date: formatDate(trip.end_date),
+                        duration: Math.ceil((new Date(trip.end_date) - new Date(trip.start_date)) / (1000 * 60 * 60 * 24)),
+                        budget: formatCommas(trip.budget),
+                        category: trip.category || "Uncategorized",
+                        priority: trip.priority,
+                        notes: trip.notes || "",
+                        reminder: trip.reminder || "No reminder set.",
+                        total_spent: formatCommas(trip.total_spent || 0),
+                        remaining_budget: formatCommas(trip.budget - (trip.total_spent || 0)),
+                        transportation: trip.transportation || "Not specified",
+                        accommodation: trip.accommodation || "Not specified",
+                        schedule: trip.schedule || [],
+                        bookings: trip.bookings || [],
+                        expenses: trip.expenses || [],
+                        // tasks: [...(trip.packing_list || []), ...(trip.todo_list || [])],
+                        user: req.session.user
+                    };
+                    res.render('pages/itinerary', itineraryData);
+                });
             });
         });
     });
@@ -348,6 +365,7 @@ router.get('/itinerary/:id', requireLogin, (req, res) => {
 
 
 router.post('/itinerary/:id/add-schedule', requireLogin, (req, res) => {
+    
     const tripId = req.params.id;
     const { date, activities } = req.body;
 
@@ -384,6 +402,7 @@ router.post('/itinerary/:id/delete-schedule/:scheduleId', requireLogin, (req, re
 });
 
 
+// Add Booking
 router.post('/itinerary/:id/add-booking', requireLogin, (req, res) => {
     const tripId = req.params.id;
     const { type, details } = req.body;
@@ -397,6 +416,8 @@ router.post('/itinerary/:id/add-booking', requireLogin, (req, res) => {
 });
 
 
+
+// Edit Booking
 router.post('/itinerary/:id/edit-booking/:bookingId', requireLogin, (req, res) => {
     const { bookingId } = req.params;
     const { type, details } = req.body;
@@ -405,10 +426,12 @@ router.post('/itinerary/:id/edit-booking/:bookingId', requireLogin, (req, res) =
         if (!success) {
             return res.status(500).json({ success: false, message: "Failed to update booking." });
         }
-        res.json({ success: true, message: "Booking updated successfully." });
+        res.json({ success: true, type, details });
     });
 });
 
+
+// Delete Booking
 router.post('/itinerary/:id/delete-booking/:bookingId', requireLogin, (req, res) => {
     const { bookingId } = req.params;
 
@@ -416,10 +439,9 @@ router.post('/itinerary/:id/delete-booking/:bookingId', requireLogin, (req, res)
         if (!success) {
             return res.status(500).json({ success: false, message: "Failed to delete booking." });
         }
-        res.json({ success: true, message: "Booking deleted successfully." });
+        res.json({ success: true });
     });
 });
-
 
 router.post('/itinerary/:id/add-task', requireLogin, (req, res) => {
     const tripId = req.params.id;
@@ -440,6 +462,58 @@ router.post('/itinerary/:id/edit-task/:taskId', requireLogin, (req, res) => {
     });
 });
 
+
+// POST Add Expense to a Trip
+router.post('/itinerary/:id/add-expense', requireLogin, (req, res) => {
+
+    const tripId = parseInt(req.params.id, 10);
+    const { name, amount } = req.body;
+
+    console.log("📝 Backend Received Expense: ", tripId, { name, amount }); // delete later
+
+    if (!name || amount <= 0) {
+        console.log("Invalid expense data:", { name, amount }); // Debugging
+        return res.status(400).json({ error: "Invalid expense data." });
+    }
+
+    tripModel.addExpense(tripId, { name, amount }, (success, expenseId) => {
+        if (!success) {
+            console.error("Failed to add expense.", tripId);
+            return res.status(500).json({ error: "Failed to add expense." });
+        }
+        console.log("Expense Added Successfully:", { tripId, expenseId, name, amount }); // Debugging
+        res.json({ success: true, id: expenseId, name, amount });
+    });
+});
+
+
+// POST Delete Expense
+router.post('/itinerary/:id/edit-expense/:expenseId', requireLogin, (req, res) => {
+    const { expenseId } = req.params;
+    const { name, amount } = req.body;
+
+    tripModel.updateExpense(expenseId, { name, amount }, (success) => {
+        if (!success) {
+            return res.status(500).json({ success: false, message: "Failed to update expense." });
+        }
+        res.json({ success: true, name, amount });
+    });
+});
+
+
+router.post('/itinerary/:id/delete-expense/:expenseId', requireLogin, (req, res) => {
+    const { expenseId } = req.params;
+
+    tripModel.deleteExpense(expenseId, (success) => {
+        if (!success) {
+            return res.status(500).json({ success: false, message: "Failed to delete expense." });
+        }
+        res.json({ success: true });
+    });
+});
+
+
+
 // GET Edit Trip Page
 router.get('/edit/:id', requireLogin, (req, res) => {
     const id = req.params.id;
@@ -453,17 +527,36 @@ router.get('/edit/:id', requireLogin, (req, res) => {
         if (!trip) {
             return res.status(404).send("Trip not found");
         }
-        res.render('templates/editTrip', { trip, success, error, from_itinerary, from_mytrips, from, user: req.session.user });
+        res.render('templates/editTrip', { 
+            trip, 
+            success, 
+            error, 
+            from_itinerary, 
+            from_mytrips, 
+            from, 
+            isPlane: trip.transportation === "Plane",
+            isTrain: trip.transportation === "Train",
+            isCar: trip.transportation === "Car",
+            isBus: trip.transportation === "Bus",
+            isOtherTransport: !["Plane", "Train", "Car", "Bus"].includes(trip.transportation),
+
+            isHotel: trip.accommodation === "Hotel",
+            isHostel: trip.accommodation === "Hostel",
+            isApartment: trip.accommodation === "Apartment",
+            isCamping: trip.accommodation === "Camping",
+            isOtherAccommodation: !["Hotel", "Hostel", "Apartment", "Camping"].includes(trip.accommodation),
+            user: req.session.user
+         });
     });
 });
 
 
 router.post('/edit/:id', requireLogin, (req, res) => {
     const id = req.params.id;
-    const { destination_name, destination, start_date, end_date, budget, notes, reminder, priority, category } = req.body;
+    const { destination_name, destination, start_date, end_date, budget, notes, reminder, priority, category, transportation, accommodation } = req.body;
     const from = req.query.from || req.body.from || ""; 
 
-    tripModel.updateTrip(id, { destination_name, destination, start_date, end_date, budget, notes, reminder, priority, category }, (err) => {
+    tripModel.updateTrip(id, { destination_name, destination, start_date, end_date, budget, notes, reminder, priority, category, transportation, accommodation }, (err) => {
         if (err) {
             return res.redirect(`/edit/${id}?error=true&from=${from}`);
         }
@@ -525,16 +618,24 @@ router.get('/priority', (req, res) => {
 // GET Explore Page
 router.get('/explore', requireLogin, (req, res) => {
     const suggestedTrips = [
-        { destination: 'Paris', best_time: 'Spring', budget: formatCommas(2000), category: "Europe",image: "/images/paris.jpg"  },
-        { destination: 'Tokyo', best_time: 'Autumn', budget: formatCommas(2500), category: "Asia", image: "/images/tokyo.jpg"  },
-        { destination: 'Rome', best_time: 'Summer', budget: formatCommas(1800), category: "Europe", image: "/images/rome.jpg"  },
-        { destination: 'New York', best_time: 'Winter', budget: formatCommas(2200), category: "USA", image: "/images/newyork.jpg" },
-        { destination: 'Miami', best_time: 'Winter', budget: formatCommas(2000), category: "USA", image: "/images/miami.jpg" },
-        { destination: 'Sydney', best_time: 'Spring', budget: formatCommas(2700), category: "Australia", image: "/images/sydney.jpg" }
+        { destination: 'Paris', best_time: 'Spring', budget: '$2,000', category: "Europe", image: "/images/paris.jpg" },
+        { destination: 'Tokyo', best_time: 'Autumn', budget: '$2,500', category: "Asia", image: "/images/tokyo.jpg" },
+        { destination: 'Rome', best_time: 'Summer', budget: '$1,800', category: "Europe", image: "/images/rome.jpg" },
+        { destination: 'New York', best_time: 'Winter', budget: '$2,200', category: "USA", image: "/images/newyork.jpg" },
+        { destination: 'Miami', best_time: 'Winter', budget: '$2,000', category: "USA", image: "/images/miami.jpg" },
+        { destination: 'Sydney', best_time: 'Spring', budget: '$2,700', category: "Australia", image: "/images/sydney.jpg" }
     ];    
-    
-    res.render('pages/explore', { suggested_trips: suggestedTrips, user: req.session.user });
+
+    const tips = [
+        { title: "Pack Smart", category: "Packing", content: "Roll your clothes to save space and avoid wrinkles." },
+        { title: "Save on Flights", category: "Budget Travel", content: "Book flights on weekdays for the best deals." },
+        { title: "Stay Safe While Traveling", category: "Safety", content: "Avoid showing valuables in crowded places." },
+        { title: "Learn Basic Local Phrases", category: "Local Tips", content: "Knowing a few phrases can help in emergencies." }
+    ];
+
+    res.render('pages/explore', { suggested_trips: suggestedTrips, tips, user: req.session.user });
 });
+
 
 // GET Settings Page
 
@@ -577,6 +678,7 @@ router.get('/tips', (req, res) => {
 
     res.render('pages/tips', { tips, user: req.session.user });
 });
+
 
 
 
