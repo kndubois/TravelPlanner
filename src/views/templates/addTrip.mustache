@@ -7,7 +7,7 @@
     </div>
 
     <div class="card shadow-sm border-0 rounded-4 p-4">
-        <form action="/add" method="POST">
+        <form action="/add" method="POST" id="trip-form">
 
             <!-- Trip Details Section -->
             <div class="mb-4">
@@ -68,16 +68,20 @@
             <div class="mb-4">
                 <h5 class="fw-bold text-primary"><i class="bi bi-car-front"></i> Travel & Stay</h5>
                 <div class="row g-4 mt-2">
+
                     <div class="col-md-6">
                         <label for="transportation" class="form-label fw-semibold">Mode of Transportation</label>
-                        <select class="form-select" id="transportation" name="transportation">
-                            <option value="Plane">Plane</option>
+
+                        <select class="form-select" id="transportation" name="transportation" onchange="toggleTransportFields()">
+                            <option value="Flight">Flight</option>
+                            <option value="Cruise">Cruise</option
                             <option value="Train">Train</option>
+                            <option value="Bus">Bus</option>
                             <option value="Car">Car</option>
-                            <option value="Boat">Boat</option>
                             <option value="Other">Other</option>
                         </select>
                     </div>
+
                     <div class="col-md-6">
                         <label for="accommodation" class="form-label fw-semibold">Accommodation Type</label>
                         <select class="form-select" id="accommodation" name="accommodation">
@@ -91,19 +95,32 @@
                 </div>
             </div>
 
-            <!-- Notes Section -->
+            <!---
+            <div class="mb-4">
+                <h5 class="fw-bold text-primary"><i class="bi bi-info-circle"></i> Booking Details</h5>
+                <div class="row g-4 mt-2">
+                    <div class="col-md-6">
+                        <label for="transportation_details" class="form-label fw-semibold">Transportation Details</label>
+                        <input type="text" class="form-control" id="transportation_details" name="transportation_details" placeholder="E.g. Flight Number, Car Rental Agency">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="accommodation_details" class="form-label fw-semibold">Accommodation Details</label>
+                        <input type="text" class="form-control" id="accommodation_details" name="accommodation_details" placeholder="E.g. Hotel Name, Airbnb Host">
+                    </div>
+                </div>
+            </div>
+            -->
+
             <div class="mb-4">
                 <h5 class="fw-bold text-primary"><i class="bi bi-pencil"></i> Notes</h5>
                 <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Add any important details about your trip..."></textarea>
             </div>
 
-            <!-- Reminder Checkbox -->
             <div class="form-check mb-4">
                 <input class="form-check-input" type="checkbox" id="reminder" name="reminder">
                 <label class="form-check-label fw-semibold" for="reminder">Enable Reminder</label>
             </div>
 
-            <!-- Submit Buttons -->
             <div class="text-center mt-4">
                 <button type="submit" class="btn btn-primary btn-lg fw-bold px-4"><i class="bi bi-check-lg"></i> Save Trip</button>
                 <a href="/mytrips" class="btn btn-outline-secondary btn-lg px-4"><i class="bi bi-x-lg"></i> Cancel</a>

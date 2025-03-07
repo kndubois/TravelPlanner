@@ -56,6 +56,32 @@ function generateScheduleDays(startDate, endDate) {
     }
 }
 
+
+function markTripAsCompleted(tripId) {
+    fetch(`/complete/${tripId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" }
+    })
+    .then(response => response.json())
+    .then(data => {
+        let errorContainer = document.getElementById("trip-error-message");
+
+        if (data.success) {
+            window.location.href = "/mytrips";
+        } else {
+            errorContainer.innerHTML = data.message;
+            errorContainer.classList.remove("d-none");
+        }
+    })
+    .catch(err => {
+        console.error("Error:", err);
+        let errorContainer = document.getElementById("trip-error-message");
+        errorContainer.innerHTML = "An error occurred. Please try again.";
+        errorContainer.classList.remove("d-none");
+    });
+}
+
+
 function toggleAddSchedule() {
     let form = document.getElementById("add-schedule-form");
     if (form) form.classList.toggle("d-none");
@@ -63,9 +89,9 @@ function toggleAddSchedule() {
 
 
 function submitNewSchedule(event, tripId) {
+
     event.preventDefault();
 
-    // If tripId is not passed, get it from the hidden input
     if (!tripId || tripId === "undefined") {
         tripId = document.getElementById("trip-id").value;
     }
@@ -89,9 +115,6 @@ function submitNewSchedule(event, tripId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            console.log("✅ Schedule added successfully. Refreshing list...");
-
-            // Refresh schedule list from server
             fetch(`/itinerary/${tripId}`)
                 .then(response => response.text())
                 .then(html => {
@@ -101,9 +124,6 @@ function submitNewSchedule(event, tripId) {
 
                     if (updatedSchedule) {
                         document.getElementById("schedule-list").innerHTML = updatedSchedule;
-                        console.log("🔄 Schedule list updated successfully.");
-                    } else {
-                        console.warn("⚠️ Warning: Could not find updated schedule list.");
                     }
                 });
 
@@ -123,8 +143,6 @@ function toggleEditSchedule(scheduleId) {
     let form = document.getElementById(`edit-schedule-form-${scheduleId}`);
     if (form) {
         form.classList.toggle("d-none");
-    } else {
-        console.error(`⚠️ Edit form not found for Schedule ID ${scheduleId}`);
     }
 }
 
@@ -145,9 +163,6 @@ function updateSchedule(event, scheduleId, tripId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            console.log(`✅ Schedule ID ${scheduleId} updated successfully`);
-
-            // Update UI without a page refresh
             let scheduleElement = document.getElementById(`schedule-${scheduleId}`);
             if (scheduleElement) {
                 scheduleElement.innerHTML = `
@@ -161,7 +176,7 @@ function updateSchedule(event, scheduleId, tripId) {
                     </div>
                 `;
             } 
-            toggleEditSchedule(scheduleId); // Hide the edit form
+            toggleEditSchedule(scheduleId);
         } else {
             alert("Failed to update schedule.");
         }
@@ -182,9 +197,6 @@ function deleteSchedule(scheduleId, tripId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            console.log(`✅ Schedule ID ${scheduleId} deleted successfully`);
-
-            // Remove the deleted schedule from the UI immediately
             let scheduleElement = document.getElementById(`schedule-${scheduleId}`);
             if (scheduleElement) {
                 scheduleElement.remove();
@@ -195,7 +207,7 @@ function deleteSchedule(scheduleId, tripId) {
             alert("Failed to delete schedule.");
         }
     })
-    .catch(err => console.error("❌ Error:", err));
+    .catch(err => console.error("Error:", err));
 }
 
 
@@ -206,7 +218,6 @@ function toggleAddBooking() {
     if (form) form.classList.toggle("d-none");
 }
 
-// Toggle edit form visibility for bookings
 function toggleEditBooking(bookingId) {
     const form = document.getElementById(`edit-booking-form-${bookingId}`);
     form.classList.toggle("d-none");
@@ -226,34 +237,31 @@ function submitNewBooking(event) {
         return;
     }
 
+    let bookingData = { type, details };
+
     fetch(`/itinerary/${tripId}/add-booking`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type, details })
+        body: JSON.stringify(bookingData)
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            let list = document.getElementById("booking-list");
-            let newBooking = document.createElement("div");
-            newBooking.id = `booking-${data.id}`;
-            newBooking.classList.add("border", "rounded-3", "p-3", "mb-2", "shadow-sm", "d-flex", "justify-content-between", "align-items-center");
 
-            newBooking.innerHTML = `
-                <div>
-                    <p class="fw-semibold text-primary mb-1">${data.type}</p>
-                    <p class="text-muted small">${data.details}</p>
-                </div>
-                <div>
-                    <button class="btn btn-sm btn-outline-secondary me-1" onclick="toggleEditBooking('${data.id}')">Edit</button>
-                    <button class="btn btn-sm btn-outline-danger" onclick="deleteBooking('${data.id}', '${tripId}')">Delete</button>
-                </div>
-            `;
+            fetch(`/itinerary/${tripId}`)
+            .then(response => response.text())
+            .then(html => {
+                let parser = new DOMParser();
+                let doc = parser.parseFromString(html, "text/html");
+                let updatedBookingList = doc.querySelector("#booking-list").innerHTML;
 
-            list.appendChild(newBooking); // Add new booking to the list
-            toggleAddBooking(); // Hide form after adding
-            document.getElementById("new-booking-type").value = ""; // Reset form
-            document.getElementById("new-booking-details").value = ""; // Reset form
+                if (updatedBookingList) {
+                    document.getElementById("booking-list").innerHTML = updatedBookingList;
+                }
+            });
+            document.getElementById("new-booking-type").value = "";
+            document.getElementById("new-booking-details").value = "";
+            toggleAddBooking();
         } else {
             alert("Failed to add booking.");
         }
@@ -314,7 +322,7 @@ function deleteBooking(bookingId, tripId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            document.getElementById(`booking-${bookingId}`).remove(); // Remove item from UI
+            document.getElementById(`booking-${bookingId}`).remove(); 
         } else {
             alert("Failed to delete booking.");
         }
@@ -324,65 +332,13 @@ function deleteBooking(bookingId, tripId) {
 
 
 
-function toggleAddTask() {
-    document.getElementById("add-task-form").classList.toggle("d-none");
-}
 
-function submitNewTask(event, tripId) {
-    event.preventDefault();
-    let item = document.getElementById("new-task-item").value;
-
-    fetch(`/itinerary/${tripId}/add-task`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ item })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            document.getElementById("task-list").innerHTML += `
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    ${data.item}
-                </li>
-            `;
-            document.getElementById("add-task-form").classList.add("d-none");
-            document.getElementById("new-task-item").value = "";
-        }
-    })
-    .catch(err => console.error("Error:", err));
+function toggleAddExpense() {
+    let form = document.getElementById("add-expense-form");
+    if (form) form.classList.toggle("d-none");
 }
 
 
-
-function submitExpense(event, tripId) {
-    event.preventDefault();
-
-    // Check if tripId is correctly passed
-    console.log("🛠 Submitting Expense - Trip ID:", tripId);
-
-    const name = document.getElementById("expense-name").value;
-    const amount = parseFloat(document.getElementById("expense-amount").value);
-
-    console.log("🔄 Sending Expense Data:", { tripId, name, amount });
-
-    fetch(`/itinerary/${tripId}/add-expense`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ name, amount })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            console.log("Expense added:", data); // delete later
-            location.reload(); // Refresh to see new expense
-        } else {
-            console.error("Error adding expense:", data.error); // delete later
-        }
-    })
-    .catch(error => console.error("Fetch Error:", error)); // delete later
-}
 
 function toggleEditExpense(expenseId) {
     let form = document.getElementById(`edit-expense-form-${expenseId}`);
@@ -393,45 +349,125 @@ function toggleEditExpense(expenseId) {
     }
 }
 
+function updateTotalSpent() {
+    let totalSpentElement = document.getElementById("total-spent");
+    let expenses = document.querySelectorAll("#expense-list .expense-amount");
+    let total = 0;
 
-function updateExpense(event, expenseId, tripId) {
+    expenses.forEach(expense => {
+        total += parseFloat(expense.textContent.replace("$", "")) || 0;
+    });
+
+    totalSpentElement.innerText = `$${total.toFixed(2)}`;
+    totalSpentElement.dataset.spent = total;
+}
+
+
+
+function submitExpense(event) {
     event.preventDefault();
 
-    let name = document.getElementById(`edit-expense-name-${expenseId}`).value;
-    let amount = parseFloat(document.getElementById(`edit-expense-amount-${expenseId}`).value);
+    let tripId = document.getElementById("trip-id").value;
+    let name = document.getElementById("expense-name").value;
+    let amount = parseFloat(document.getElementById("expense-amount").value);
 
-    fetch(`/itinerary/${tripId}/edit-expense/${expenseId}`, {
+    if (!tripId) {
+        console.error("Trip ID is missing.");
+        return;
+    }
+
+    let expenseData = { name, amount };
+
+    fetch(`/itinerary/${tripId}/add-expense`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, amount })
+        body: JSON.stringify(expenseData)
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            let expenseElement = document.getElementById(`expense-${expenseId}`);
-            if (expenseElement) {
-                expenseElement.innerHTML = `
-                    <div>
-                        <p class="fw-semibold text-primary mb-1">${name}</p>
-                        <p class="text-muted small">$${amount}</p>
-                    </div>
-                    <div>
-                        <button class="btn btn-sm btn-outline-secondary me-1" onclick="toggleEditExpense('${expenseId}')">Edit</button>
-                        <button class="btn btn-sm btn-outline-danger" onclick="deleteExpense('${expenseId}', '${tripId}')">Delete</button>
-                    </div>
-                `;
-            }
-            toggleEditExpense(expenseId); // Hide edit form after saving
+            // Create new expense in UI
+            let expenseList = document.getElementById("expense-list");
+            let newExpense = document.createElement("div");
+            newExpense.id = `expense-${data.id}`;
+            newExpense.className = "border rounded p-3 mb-2 shadow-sm d-flex justify-content-between align-items-center";
+            newExpense.innerHTML = `
+                <div>
+                    <p class="fw-semibold text-primary mb-1">${data.name}</p>
+                    <p class="text-muted small expense-amount">$${data.amount.toFixed(2)}</p>
+                </div>
+                <div>
+                    <button class="btn btn-sm btn-outline-secondary me-1" onclick="toggleEditExpense('${data.id}')">Edit</button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteExpense('${data.id}', '${tripId}')">Delete</button>
+                </div>
+            `;
+
+            expenseList.appendChild(newExpense);
+
+            // Update Total Spent
+            updateTotalSpent();
+
+            // Reset form fields
+            document.getElementById("expense-name").value = "";
+            document.getElementById("expense-amount").value = "";
+
+            toggleAddExpense();
         } else {
-            alert("Failed to update expense.");
+            console.error("Failed to add expense.");
+        }
+    })
+    .catch(err => console.error("Error:", err));
+}
+
+
+function updateExpense(event, expenseId, tripId) {
+    event.preventDefault(); // Prevent form from refreshing
+
+    let name = document.getElementById(`edit-expense-name-${expenseId}`).value.trim();
+    let newAmount = parseFloat(document.getElementById(`edit-expense-amount-${expenseId}`).value);
+
+    if (!name || isNaN(newAmount) || newAmount <= 0) {
+        console.error("Invalid expense data.");
+        return;
+    }
+
+    let expenseElement = document.getElementById(`expense-${expenseId}`);
+    let oldAmountElement = expenseElement.querySelector(".expense-amount");
+
+    if (!oldAmountElement) {
+        console.error("Error: Could not find expense amount element.");
+        return;
+    }
+
+    let oldAmount = parseFloat(oldAmountElement.textContent.replace("$", "")) || 0;
+
+    fetch(`/itinerary/${tripId}/edit-expense/${expenseId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, amount: newAmount })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update UI with new expense name and amount
+            oldAmountElement.textContent = `$${newAmount.toFixed(2)}`;
+            expenseElement.querySelector(".fw-semibold").textContent = name;
+
+            // Recalculate Total Spent by summing all expenses
+            updateTotalSpent();
+
+            // Hide the edit form
+            toggleEditExpense(expenseId);
+        } else {
+            console.error("Failed to update expense.");
         }
     })
     .catch(err => console.error("Error updating expense:", err));
 }
 
-function deleteExpense(expenseId, tripId) {
-    if (!confirm("Are you sure you want to delete this expense?")) return;
 
+
+function deleteExpense(expenseId, tripId) {
     fetch(`/itinerary/${tripId}/delete-expense/${expenseId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" }
@@ -439,9 +475,15 @@ function deleteExpense(expenseId, tripId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            document.getElementById(`expense-${expenseId}`).remove();
+            let expenseElement = document.getElementById(`expense-${expenseId}`);
+            if (expenseElement) {
+                expenseElement.remove();
+            }
+
+            // Update Total Spent
+            updateTotalSpent();
         } else {
-            alert("Failed to delete expense.");
+            console.error("Failed to delete expense.");
         }
     })
     .catch(err => console.error("Error deleting expense:", err));

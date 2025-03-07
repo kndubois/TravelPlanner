@@ -146,46 +146,59 @@ router.post('/logout', (req, res) => {
 
 // GET Dashboard (Protected)
 router.get('/dashboard', requireLogin, (req, res) => {
+
     tripModel.getAllTrips((trips) => {
 
         const today = new Date();
+        let totalSpent = 0;
+        let tripsProcessed = 0;
 
+        // If there are no trips at all, render the dashboard immediately
+        if (trips.length === 0) {
+            return res.render('pages/dashboard', {
+                trips: [],
+                ongoing_trips: [],
+                upcoming_trips: [],
+                completed_trips: [],
+                completed_trips_all: [],
+                ongoing_trips_limited: [],
+                upcoming_trips_limited: [],
+                completed_trips_limited: [],
+                next_trip: null,
+                reminders: [],
+                trip_count: 0,
+                total_budget: formatCommas(0),
+                total_spent: formatCommas(0),
+                user: req.session.user
+            });
+        }
+
+        // Prepare trips data
         trips.forEach(trip => {
             trip.budget = formatCommas(trip.budget);
-
             const startDate = new Date(trip.start_date);
             const endDate = new Date(trip.end_date);
-            
+
             trip.start_date = formatDate(trip.start_date);
             trip.end_date = formatDate(trip.end_date);
-
             trip.is_completed = trip.completed === 1 || endDate < today;
             trip.duration = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
-
-            trip.destination_name = trip.destination_name || trip.destination; 
+            trip.destination_name = trip.destination_name || trip.destination;
 
             if (trip.is_completed) {
                 trip.old_duration = oldDuration(trip.end_date);
             }
         });
 
-        const ongoingTrips = trips.filter(trip => !trip.is_completed && new Date(trip.start_date) <= today && new Date(trip.end_date) >= today);
-        const upcomingTrips = trips.filter(trip => !trip.is_completed && new Date(trip.start_date) > today);
-        const completedTrips = trips.filter(trip => trip.is_completed); 
+        // Categorize trips
+        let ongoingTrips = trips.filter(trip => !trip.is_completed && new Date(trip.start_date) <= today && new Date(trip.end_date) >= today);
+        let upcomingTrips = trips.filter(trip => !trip.is_completed && new Date(trip.start_date) > today);
+        let completedTrips = trips.filter(trip => trip.is_completed);
 
-        ongoingTrips.forEach(trip => {
-            trip.start_date = formatDate(trip.start_date);
-            trip.end_date = formatDate(trip.end_date);
-        });
-
-        upcomingTrips.forEach(trip => {
-            trip.start_date = formatDate(trip.start_date);
-            trip.end_date = formatDate(trip.end_date);
-        });
+        // Ensure completed trips are sorted by most recent first
+        completedTrips.sort((a, b) => new Date(b.end_date) - new Date(a.end_date));
 
         completedTrips.forEach((trip, index) => {
-            trip.start_date = formatDate(trip.start_date);
-            trip.end_date = formatDate(trip.end_date);
             trip.last = index === completedTrips.length - 1;
         });
 
@@ -194,30 +207,43 @@ router.get('/dashboard', requireLogin, (req, res) => {
         const completedTripsLimited = completedTrips.slice(0, 3);
 
         const reminders = trips
-        .filter(trip => trip.reminder && trip.reminder.trim() !== "")
-        .map(trip => ({ 
-            destination_name: trip.destination_name || trip.destination, 
-            start_date: trip.start_date
-        }));
-    
+            .filter(trip => trip.reminder && trip.reminder.trim() !== "" && !trip.is_completed)
+            .map((trip, index, array) => ({ 
+                destination_name: trip.destination_name || trip.destination, 
+                start_date: trip.start_date,
+                last: index === array.length - 1
+            }));
 
-        res.render('pages/dashboard', {
-            trips,
-            ongoing_trips: ongoingTrips,
-            upcoming_trips: upcomingTrips,
-            completed_trips: completedTrips,
-            ongoing_trips_limited: ongoingTripsLimited, 
-            upcoming_trips_limited: upcomingTripsLimited,
-            completed_trips_limited: completedTripsLimited, 
-            next_trip: upcomingTrips.length > 0 ? upcomingTrips[0] : null,
-            reminders,
-            trip_count: trips.length,
-            total_budget: formatCommas(trips.reduce((sum, trip) => sum + parseFloat(trip.budget.toString().replace(/[^0-9.]/g, '')) || 0, 0)),
-            total_spent: formatCommas(trips.reduce((sum, trip) => sum + (trip.total_spent || 0), 0)),
-            user: req.session.user
+        // Fetch expenses for all trips
+        trips.forEach(trip => {
+            tripModel.getExpensesByTripId(trip.id, (expenses) => {
+                trip.total_spent = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+                totalSpent += trip.total_spent;
+                tripsProcessed++;
+
+                // Ensure all trips are processed before rendering
+                if (tripsProcessed === trips.length) {
+                    res.render('pages/dashboard', {
+                        trips,
+                        ongoing_trips: ongoingTrips,
+                        upcoming_trips: upcomingTrips,
+                        completed_trips: completedTripsLimited.length > 0 ? completedTripsLimited : null,
+                        completed_trips_all: completedTrips.length > 0 ? completedTrips : null,
+                        ongoing_trips_limited: ongoingTripsLimited, 
+                        upcoming_trips_limited: upcomingTripsLimited,
+                        next_trip: upcomingTrips.length > 0 ? upcomingTrips[0] : null,
+                        reminders,
+                        trip_count: trips.length,
+                        total_budget: formatCommas(trips.reduce((sum, trip) => sum + parseFloat(trip.budget.toString().replace(/[^0-9.]/g, '')) || 0, 0)),
+                        total_spent: formatCommas(totalSpent),
+                        user: req.session.user
+                    });
+                }
+            });
         });
     });
 });
+
 
 
 const oldDuration = (dateString) => {
@@ -279,6 +305,7 @@ router.get('/mytrips', requireLogin, (req, res) => {
 
 // GET Add Trip Page (Pre-filled from Explore Page)
 router.get('/add-trip', requireLogin, (req, res) => {
+
     const { destination } = req.query;
     res.render('templates/addTrip', { destination, user: req.session.user });
 });
@@ -286,11 +313,13 @@ router.get('/add-trip', requireLogin, (req, res) => {
 
 // POST create a new trip
 router.post('/add', requireLogin, (req, res) => {
-    const user_id = req.session.user.id; // Get logged-in user ID
-    let { destination, start_date, end_date, budget, notes, reminder, priority, category, transportation, accommodation } = req.body;
+
+    const user_id = req.session.user.id;
+
+    let { destination, destination_name, start_date, end_date, budget, notes, reminder, priority, category, transportation, accommodation, transportation_details, accommodation_details } = req.body;
 
 
-    if (!destination || destination.length < 3 || budget <= 0) {
+    if (!destination_name || !destination || destination.length < 3 || budget <= 0) {
         return res.status(400).send("Invalid input: Destination must be at least 3 characters, and budget must be positive.");
     }
 
@@ -298,7 +327,7 @@ router.post('/add', requireLogin, (req, res) => {
         return res.status(400).send("Error: End date cannot be before start date.");
     }
 
-    tripModel.addTrip({ destination, start_date, end_date, budget, notes, reminder, priority, category, transportation, accommodation }, user_id, () => {
+    tripModel.addTrip({ destination, destination_name, start_date, end_date, budget, notes, reminder, priority, category, transportation, accommodation, transportation_details, accommodation_details }, user_id, () => {
         res.redirect('/mytrips');
     });
 });
@@ -311,6 +340,7 @@ router.get('/itinerary/:id', requireLogin, (req, res) => {
     const tripId = parseInt(req.params.id, 10);
 
     tripModel.getTripById(tripId, (trip) => {
+
         if (!trip) {
             return res.status(404).send("Trip not found");
         }
@@ -318,7 +348,6 @@ router.get('/itinerary/:id', requireLogin, (req, res) => {
         tripModel.getExpensesByTripId(tripId, (expenses) => {
 
             trip.expenses = expenses || [];
-
             trip.total_spent = expenses.reduce((sum, expense) => sum + expense.amount, 0);
             trip.remaining_budget = trip.budget - trip.total_spent;
 
@@ -331,6 +360,7 @@ router.get('/itinerary/:id', requireLogin, (req, res) => {
 
                 // Fetch bookings data
                 tripModel.getBookingsByTripId(tripId, (bookings) => {
+
                     trip.bookings = bookings || [];  
 
                     const itineraryData = {
@@ -345,15 +375,17 @@ router.get('/itinerary/:id', requireLogin, (req, res) => {
                         category: trip.category || "Uncategorized",
                         priority: trip.priority,
                         notes: trip.notes || "",
-                        reminder: trip.reminder || "No reminder set.",
+                        reminder: trip.reminder || "No reminder set",
                         total_spent: formatCommas(trip.total_spent || 0),
                         remaining_budget: formatCommas(trip.budget - (trip.total_spent || 0)),
                         transportation: trip.transportation || "Not specified",
+                        transportation_details: trip.transportation_details || "Not specified",
                         accommodation: trip.accommodation || "Not specified",
+                        accommodation_details: trip.accommodation_details || "Not specified",
                         schedule: trip.schedule || [],
                         bookings: trip.bookings || [],
                         expenses: trip.expenses || [],
-                        // tasks: [...(trip.packing_list || []), ...(trip.todo_list || [])],
+
                         user: req.session.user
                     };
                     res.render('pages/itinerary', itineraryData);
@@ -404,10 +436,12 @@ router.post('/itinerary/:id/delete-schedule/:scheduleId', requireLogin, (req, re
 
 // Add Booking
 router.post('/itinerary/:id/add-booking', requireLogin, (req, res) => {
-    const tripId = req.params.id;
-    const { type, details } = req.body;
 
-    tripModel.addBooking(tripId, { type, details }, (success, bookingId) => {
+    const tripId = req.params.id;
+    
+    const { type, details, departure_time, arrival_time, hotel_name, check_in_date, check_out_date, pickup_location, dropoff_location, pickup_date, dropoff_date, departure_airport, arrival_airport, departure_port, arrival_port, cruise_line, departure_station, arrival_station, train_number, departure_terminal, arrival_terminal, bus_number } = req.body;
+
+    tripModel.addBooking(tripId, { type, details, departure_time, arrival_time, hotel_name, check_in_date, check_out_date, pickup_location, dropoff_location, pickup_date, dropoff_date, departure_airport, arrival_airport, departure_port, arrival_port, cruise_line, departure_station, arrival_station, train_number, departure_terminal, arrival_terminal, bus_number }, (success, bookingId) => {
         if (!success) {
             return res.status(500).json({ success: false, message: "Failed to add booking." });
         }
@@ -420,9 +454,9 @@ router.post('/itinerary/:id/add-booking', requireLogin, (req, res) => {
 // Edit Booking
 router.post('/itinerary/:id/edit-booking/:bookingId', requireLogin, (req, res) => {
     const { bookingId } = req.params;
-    const { type, details } = req.body;
+    const { type, details, departure_time, arrival_time, hotel_name, check_in_date, check_out_date, pickup_location, dropoff_location, pickup_date, dropoff_date, departure_airport, arrival_airport, departure_port, arrival_port, cruise_line, departure_station, arrival_station, train_number, departure_terminal, arrival_terminal, bus_number } = req.body;
 
-    tripModel.updateBooking(bookingId, { type, details }, (success) => {
+    tripModel.updateBooking(bookingId, { type, details, departure_time, arrival_time, hotel_name, check_in_date, check_out_date, pickup_location, dropoff_location, pickup_date, dropoff_date, departure_airport, arrival_airport, departure_port, arrival_port, cruise_line, departure_station, arrival_station, train_number, departure_terminal, arrival_terminal, bus_number }, (success) => {
         if (!success) {
             return res.status(500).json({ success: false, message: "Failed to update booking." });
         }
@@ -443,24 +477,6 @@ router.post('/itinerary/:id/delete-booking/:bookingId', requireLogin, (req, res)
     });
 });
 
-router.post('/itinerary/:id/add-task', requireLogin, (req, res) => {
-    const tripId = req.params.id;
-    const { item } = req.body;
-
-    tripModel.addTask(tripId, { item }, () => {
-        res.json({ success: true, item });
-    });
-});
-
-
-router.post('/itinerary/:id/edit-task/:taskId', requireLogin, (req, res) => {
-    const { taskId } = req.params;
-    const { item } = req.body;
-
-    tripModel.updateTask(taskId, { item }, () => {
-        res.redirect(`/itinerary/${req.params.id}`);
-    });
-});
 
 
 // POST Add Expense to a Trip
@@ -469,19 +485,14 @@ router.post('/itinerary/:id/add-expense', requireLogin, (req, res) => {
     const tripId = parseInt(req.params.id, 10);
     const { name, amount } = req.body;
 
-    console.log("📝 Backend Received Expense: ", tripId, { name, amount }); // delete later
-
     if (!name || amount <= 0) {
-        console.log("Invalid expense data:", { name, amount }); // Debugging
         return res.status(400).json({ error: "Invalid expense data." });
     }
 
     tripModel.addExpense(tripId, { name, amount }, (success, expenseId) => {
         if (!success) {
-            console.error("Failed to add expense.", tripId);
             return res.status(500).json({ error: "Failed to add expense." });
         }
-        console.log("Expense Added Successfully:", { tripId, expenseId, name, amount }); // Debugging
         res.json({ success: true, id: expenseId, name, amount });
     });
 });
@@ -516,10 +527,12 @@ router.post('/itinerary/:id/delete-expense/:expenseId', requireLogin, (req, res)
 
 // GET Edit Trip Page
 router.get('/edit/:id', requireLogin, (req, res) => {
+    
     const id = req.params.id;
+
     const success = req.query.success === "true";
     const error = req.query.error === "true";
-    const from = req.query.from || "";
+    const from = req.query.from || req.body.from || ""; 
     const from_itinerary = req.query.from === "itinerary";
     const from_mytrips = req.query.from === "mytrips";
 
@@ -534,17 +547,19 @@ router.get('/edit/:id', requireLogin, (req, res) => {
             from_itinerary, 
             from_mytrips, 
             from, 
-            isPlane: trip.transportation === "Plane",
+            isFlight: trip.transportation === "Flight",
+            isCruise: trip.transportation === "Cruise",
             isTrain: trip.transportation === "Train",
             isCar: trip.transportation === "Car",
             isBus: trip.transportation === "Bus",
-            isOtherTransport: !["Plane", "Train", "Car", "Bus"].includes(trip.transportation),
+            isOtherTransport: !["Flight", "Cruise", "Train", "Car", "Bus"].includes(trip.transportation),
 
             isHotel: trip.accommodation === "Hotel",
             isHostel: trip.accommodation === "Hostel",
-            isApartment: trip.accommodation === "Apartment",
+            isAirbnb: trip.accommodation === "Airbnb",
             isCamping: trip.accommodation === "Camping",
-            isOtherAccommodation: !["Hotel", "Hostel", "Apartment", "Camping"].includes(trip.accommodation),
+            isOtherAccommodation: !["Hotel", "Hostel", "Airbnb", "Camping"].includes(trip.accommodation),
+
             user: req.session.user
          });
     });
@@ -552,11 +567,14 @@ router.get('/edit/:id', requireLogin, (req, res) => {
 
 
 router.post('/edit/:id', requireLogin, (req, res) => {
+
     const id = req.params.id;
-    const { destination_name, destination, start_date, end_date, budget, notes, reminder, priority, category, transportation, accommodation } = req.body;
+    
+    const { destination_name, destination, start_date, end_date, budget, notes, reminder, priority, category, transportation, accommodation, transportation_details, accommodation_details } = req.body;
+    
     const from = req.query.from || req.body.from || ""; 
 
-    tripModel.updateTrip(id, { destination_name, destination, start_date, end_date, budget, notes, reminder, priority, category, transportation, accommodation }, (err) => {
+    tripModel.updateTrip(id, { destination_name, destination, start_date, end_date, budget, notes, reminder, priority, category, transportation, accommodation, transportation_details, accommodation_details }, (err) => {
         if (err) {
             return res.redirect(`/edit/${id}?error=true&from=${from}`);
         }
@@ -573,19 +591,18 @@ router.post('/complete/:id', requireLogin, (req, res) => {
 
     tripModel.getTripById(id, (trip) => {
         if (!trip) {
-            return res.status(404).send("Trip not found");
+            return res.status(404).json({ success: false, message: "Trip not found" });
         }
 
         const today = new Date();
         const endDate = new Date(trip.end_date);
 
-        // ✅ Only mark a trip as completed if today is AFTER the end date
         if (today < endDate) {
-            return res.status(400).send("Error: You cannot mark a trip as completed before it ends.");
+            return res.status(400).json({ success: false, message: "Error: You cannot mark a trip as completed before it ends." });
         }
 
         tripModel.markTripCompleted(id, () => {
-            res.redirect('/mytrips');
+            res.json({ success: true });
         });
     });
 });

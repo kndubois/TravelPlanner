@@ -29,9 +29,14 @@ const init = () => {
         reminder TEXT,
         priority TEXT NOT NULL, 
         category TEXT NOT NULL,
+        transportation TEXT,
+        accommodation TEXT,
+        transportation_details TEXT,
+        accommodation_details TEXT,
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     )`);
 
+    // Schedule Table
     db.run(`CREATE TABLE IF NOT EXISTS schedule (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         trip_id INTEGER NOT NULL,
@@ -40,19 +45,32 @@ const init = () => {
         FOREIGN KEY (trip_id) REFERENCES trips(id) ON DELETE CASCADE
     )`);
 
+    // Bookings Table
     db.run(`CREATE TABLE IF NOT EXISTS bookings (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         trip_id INTEGER NOT NULL,
         type TEXT NOT NULL,
         details TEXT NOT NULL,
-        FOREIGN KEY (trip_id) REFERENCES trips(id) ON DELETE CASCADE
-    )`);
-
-    db.run(`CREATE TABLE IF NOT EXISTS tasks (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        trip_id INTEGER NOT NULL,
-        item TEXT NOT NULL,
-        completed INTEGER DEFAULT 0,
+        departure_airport TEXT DEFAULT NULL,
+        departure_time TEXT DEFAULT NULL,
+        arrival_airport TEXT DEFAULT NULL,
+        arrival_time TEXT DEFAULT NULL,
+        departure_port TEXT DEFAULT NULL,
+        arrival_port TEXT DEFAULT NULL,
+        cruise_line TEXT DEFAULT NULL,
+        departure_station TEXT DEFAULT NULL,
+        arrival_station TEXT DEFAULT NULL,
+        train_number TEXT DEFAULT NULL,
+        departure_terminal TEXT DEFAULT NULL,
+        arrival_terminal TEXT DEFAULT NULL,
+        bus_number TEXT DEFAULT NULL,
+        hotel_name TEXT DEFAULT NULL, 
+        check_in_date TEXT DEFAULT NULL,
+        check_out_date TEXT DEFAULT NULL,
+        pickup_location TEXT DEFAULT NULL,
+        dropoff_location TEXT DEFAULT NULL,
+        pickup_date TEXT DEFAULT NULL,
+        dropoff_date TEXT DEFAULT NULL,
         FOREIGN KEY (trip_id) REFERENCES trips(id) ON DELETE CASCADE
     )`);
 
@@ -142,12 +160,12 @@ const getAllTrips = (callback) => {
     });
 };
 
-const addTrip = (trip, user_id, callback) => {  // Now includes user_id
-    const { destination, destination_name, start_date, end_date, budget, notes, reminder, priority, category, transportation, accommodation } = trip;
+const addTrip = (trip, user_id, callback) => { 
+    const { destination, destination_name, start_date, end_date, budget, notes, completed, reminder, priority, category, transportation, accommodation, transportation_details, accommodation_details } = trip;
     
     db.run(
-        "INSERT INTO trips (user_id, destination, destination_name, start_date, end_date, budget, notes, reminder, priority, category, transportation, accommodation) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        [user_id, destination, destination_name, start_date, end_date, budget, notes, reminder, priority, category, transportation, accommodation],
+        "INSERT INTO trips (user_id, destination, destination_name, start_date, end_date, budget, notes, completed, reminder, priority, category, transportation, accommodation, transportation_details, accommodation_details) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        [user_id, destination, destination_name, start_date, end_date, budget, notes, completed, reminder, priority, category, transportation, accommodation, transportation_details, accommodation_details],
         function (err) {
             if (err) {
                 console.error("Error inserting trip:", err);
@@ -158,36 +176,23 @@ const addTrip = (trip, user_id, callback) => {  // Now includes user_id
     );
 };
 
-
-// Get a single trip by ID
-const getTripById = (id, callback) => {
-    db.get("SELECT * FROM trips WHERE id = ?", [id], (err, row) => {
-        if (err) {
-            console.error(err);
-            return callback(null);
-        }
-        callback(row);
-    });
-};
-
 // Update an existing trip
 const updateTrip = (id, trip, callback) => {
-    const { destination_name, destination, start_date, end_date, budget, notes, reminder, priority, category, transportation, accommodation } = trip;
+    const { destination_name, destination, start_date, end_date, budget, notes, reminder, priority, category, transportation, accommodation, transportation_details, accommodation_details } = trip;
     
     const sql = `
         UPDATE trips 
-        SET destination_name = ?, destination = ?, start_date = ?, end_date = ?, budget = ?, notes = ?, reminder = ?, priority = ?, category = ?, transportation = ?, accommodation = ?
+        SET destination_name = ?, destination = ?, start_date = ?, end_date = ?, budget = ?, notes = ?, reminder = ?, priority = ?, category = ?, transportation = ?, accommodation = ?, transportation_details = ?, accommodation_details = ?
         WHERE id = ?;
     `;
 
-    db.run(sql, [destination_name, destination, start_date, end_date, budget, notes, reminder, priority, category, transportation, accommodation, id], function (err) {
+    db.run(sql, [destination_name, destination, start_date, end_date, budget, notes, reminder, priority, category, transportation, accommodation, transportation_details, accommodation_details, id], function (err) {
         if (err) {
             return callback(err);
         }
         callback();
     });
 };
-
 
 
 const deleteTrip = (id, callback) => {
@@ -211,8 +216,19 @@ const markTripCompleted = (id, callback) => {
 };
 
 
+// Get a single trip by ID
+const getTripById = (id, callback) => {
+    db.get("SELECT * FROM trips WHERE id = ?", [id], (err, row) => {
+        if (err) {
+            console.error(err);
+            return callback(null);
+        }
+        callback(row);
+    });
+};
+
 const getFilteredTrips = (filters, callback) => {
-    let query = "SELECT id, user_id, destination, destination_name, start_date, end_date, budget, notes, reminder, priority, category, completed FROM trips WHERE 1=1";
+    let query = "SELECT id, user_id, destination, destination_name, start_date, end_date, budget, notes, completed, reminder, priority, category, transportation, accommodation, transportation_details, accommodation_details FROM trips WHERE 1=1";
     let params = [];
 
     if (filters.priority && filters.priority !== "") {
@@ -296,7 +312,6 @@ const updateSchedule = (id, schedule, callback) => {
     );
 };
 
-
 const deleteSchedule = (id, callback) => {
     db.run("DELETE FROM schedule WHERE id = ?", [id], function (err) {
         if (err) {
@@ -307,10 +322,22 @@ const deleteSchedule = (id, callback) => {
     });
 };
 
+const getScheduleByTripId = (tripId, callback) => {
+    
+    db.all("SELECT * FROM schedule WHERE trip_id = ?", [tripId], (err, rows) => {
+        if (err) {
+            console.error("Error fetching schedule:", err);
+            return callback([]);
+        }
+        callback(rows);
+    });
+};
+
+
 const addBooking = (tripId, booking, callback) => {
-    const { type, details } = booking;
-    db.run("INSERT INTO bookings (trip_id, type, details) VALUES (?, ?, ?)",
-        [tripId, type, details],
+    const { type, details, departure_time, departure_airport, arrival_time, arrival_airport, hotel_name, check_in_date, check_out_date, pickup_location, dropoff_location, pickup_date, dropoff_date, departure_port, arrival_port, cruise_line, departure_station, arrival_station, train_number, departure_terminal, arrival_terminal, bus_number } = booking;
+    db.run("INSERT INTO bookings (trip_id, type, details, departure_time, departure_airport, arrival_time, arrival_airport, hotel_name, check_in_date, check_out_date, pickup_location, dropoff_location, pickup_date, dropoff_date, departure_port, arrival_port, cruise_line, departure_station, arrival_station, train_number, departure_terminal, arrival_terminal, bus_number) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        [tripId, type, details, departure_time, departure_airport, arrival_time, arrival_airport, hotel_name, check_in_date, check_out_date, pickup_location, dropoff_location, pickup_date, dropoff_date, departure_port, arrival_port, cruise_line, departure_station, arrival_station, train_number, departure_terminal, arrival_terminal, bus_number],
         function (err) {
             if (err) {
                 console.error("Error adding booking:", err);
@@ -322,9 +349,9 @@ const addBooking = (tripId, booking, callback) => {
 };
 
 const updateBooking = (id, booking, callback) => {
-    const { type, details } = booking;
-    db.run("UPDATE bookings SET type = ?, details = ? WHERE id = ?",
-        [type, details, id],
+    const { type, details, departure_time, departure_airport, arrival_time, arrival_airport, hotel_name, check_in_date, check_out_date, pickup_location, dropoff_location, pickup_date, dropoff_date, departure_port, arrival_port, cruise_line, departure_station, arrival_station, train_number, departure_terminal, arrival_terminal, bus_number } = booking;
+    db.run("UPDATE bookings SET type = ?, details = ?, departure_time = ?, arrival_time = ?, hotel_name = ?, check_in_date = ?, check_out_date = ?, pickup_location = ?, dropoff_location = ?, pickup_date = ?, dropoff_date = ?, departure_airport = ?, arrival_airport = ?, departure_port = ?, arrival_port = ?, cruise_line = ?, departure_station = ?, arrival_station = ?, train_number = ?, departure_terminal = ?, arrival_terminal = ?, bus_number = ? WHERE id = ?",
+        [type, details, departure_time, departure_airport, arrival_time, arrival_airport, hotel_name, check_in_date, check_out_date, pickup_location, dropoff_location, pickup_date, dropoff_date, departure_port, arrival_port, cruise_line, departure_station, arrival_station, train_number, departure_terminal, arrival_terminal, bus_number, id],
         function (err) {
             if (err) {
                 console.error("Error updating booking:", err);
@@ -346,57 +373,16 @@ const deleteBooking = (id, callback) => {
     });
 };
 
-
-const addTask = (tripId, task, callback) => {
-    const { item } = task;
-    db.run("INSERT INTO tasks (trip_id, item) VALUES (?, ?)",
-        [tripId, item],
-        function (err) {
-            if (err) {
-                console.error("Error adding task:", err);
-                return;
-            }
-            callback();
-        }
-    );
-};
-
-const updateTask = (id, task, callback) => {
-    const { item } = task;
-    db.run("UPDATE tasks SET item = ? WHERE id = ?",
-        [item, id],
-        function (err) {
-            if (err) {
-                console.error("Error updating task:", err);
-                return;
-            }
-            callback();
-        }
-    );
-};
-
-const deleteTask = (id, callback) => {
-    db.run("DELETE FROM tasks WHERE id = ?", [id], function (err) {
+const getBookingsByTripId = (tripId, callback) => {
+    db.all("SELECT * FROM bookings WHERE trip_id = ?", [tripId], (err, rows) => {
         if (err) {
-            console.error("Error deleting task:", err);
-            return;
-        }
-        callback();
-    });
-};
-
-
-// Get all expenses for a specific trip
-const getExpensesByTripId = (tripId, callback) => {
-
-    db.all("SELECT * FROM expenses WHERE trip_id = ?", [tripId], (err, expenses) => {
-        if (err) {
-            console.error("Error fetching expenses from database:", err); // delete later 
+            console.error("Error fetching bookings:", err);
             return callback([]);
         }
-        callback(expenses);
+        callback(rows);
     });
 };
+
 
 
 // Add an expense to a trip
@@ -409,7 +395,6 @@ const addExpense = (tripId, expense, callback) => {
                 console.error("Error adding expense:", err);
                 return callback(false, null);
             }
-            console.log("✅ Expense Added:", { id: this.lastID, tripId, name, amount }); // Debugging
             callback(true, this.lastID);
         }
     );
@@ -429,8 +414,6 @@ const updateExpense = (id, expense, callback) => {
     );
 };
 
-
-
 // Delete an expense
 const deleteExpense = (expenseId, callback) => {
     db.run("DELETE FROM expenses WHERE id = ?", [expenseId], function (err) {
@@ -438,6 +421,18 @@ const deleteExpense = (expenseId, callback) => {
             return callback(false);
         }
         callback(true);
+    });
+};
+
+// Get all expenses for a specific trip
+const getExpensesByTripId = (tripId, callback) => {
+
+    db.all("SELECT * FROM expenses WHERE trip_id = ?", [tripId], (err, expenses) => {
+        if (err) {
+            console.error("Error fetching expenses from database:", err); // delete later 
+            return callback([]);
+        }
+        callback(expenses);
     });
 };
 
@@ -454,25 +449,7 @@ const getItineraryByTripId = (tripId, callback) => {
     });
 };
 
-const getScheduleByTripId = (tripId, callback) => {
-    
-    db.all("SELECT * FROM schedule WHERE trip_id = ?", [tripId], (err, rows) => {
-        if (err) {
-            console.error("Error fetching schedule:", err);
-            return callback([]);
-        }
-        callback(rows);
-    });
-};
 
-const getBookingsByTripId = (tripId, callback) => {
-    db.all("SELECT * FROM bookings WHERE trip_id = ?", [tripId], (err, rows) => {
-        if (err) {
-            console.error("Error fetching bookings:", err);
-            return callback([]);
-        }
-        callback(rows);
-    });
-};
 
-module.exports = { init, createUser, updateUser, getUserById, findUserByEmail, getAllTrips, addTrip, getTripById, updateTrip, deleteTrip, markTripCompleted, addScheduleItem, updateSchedule, deleteSchedule, addBooking, updateBooking, deleteBooking, addTask, updateTask, deleteTask, addExpense, updateExpense, deleteExpense, getExpensesByTripId, getItineraryByTripId, getScheduleByTripId, getBookingsByTripId, getFilteredTrips };
+
+module.exports = { init, createUser, updateUser, getUserById, findUserByEmail, getAllTrips, addTrip, getTripById, updateTrip, deleteTrip, markTripCompleted, addScheduleItem, updateSchedule, deleteSchedule, addBooking, updateBooking, deleteBooking, addExpense, updateExpense, deleteExpense, getExpensesByTripId, getItineraryByTripId, getScheduleByTripId, getBookingsByTripId, getFilteredTrips };

@@ -3,7 +3,7 @@
 <div class="container mt-5 mb-5">
     <div class="text-center mb-4">
         <h2 class="fw-bold text-primary">Edit Trip</h2>
-        <p class="text-muted">Update your trip details.</p>
+        <p class="text-muted">Update your trip details</p>
     </div>
 
     {{#success}}
@@ -21,6 +21,7 @@
 
             <!-- Trip Name & Destination -->
             <div class="row g-4 mb-3">
+            <h5 class="fw-bold text-primary"><i class="bi bi-info-circle"></i> Travel Details</h5>
                 <div class="col-md-6">
                     <label for="destination_name" class="form-label fw-semibold">Trip Name</label>
                     <input type="text" class="form-control" id="destination_name" name="destination_name" value="{{trip.destination_name}}" placeholder="E.g. Graduation Trip">
@@ -68,7 +69,8 @@
                 <div class="col-md-6">
                     <label for="transportation" class="form-label fw-semibold">Mode of Transportation</label>
                     <select id="transportation" name="transportation" class="form-select">
-                        <option value="Plane" {{#isPlane}}selected{{/isPlane}}>Plane</option>
+                        <option value="Flight" {{#isFlight}}selected{{/isFlight}}>Flight</option>
+                        <option value="Cruise" {{#isCruise}}selected{{/isCruise}}>Cruise</option>
                         <option value="Train" {{#isTrain}}selected{{/isTrain}}>Train</option>
                         <option value="Car" {{#isCar}}selected{{/isCar}}>Car</option>
                         <option value="Bus" {{#isBus}}selected{{/isBus}}>Bus</option>
@@ -81,12 +83,13 @@
                     <select id="accommodation" name="accommodation" class="form-select">
                         <option value="Hotel" {{#isHotel}}selected{{/isHotel}}>Hotel</option>
                         <option value="Hostel" {{#isHostel}}selected{{/isHostel}}>Hostel</option>
-                        <option value="Apartment" {{#isApartment}}selected{{/isApartment}}>Apartment</option>
+                        <option value="Airbnb" {{#isAirbnb}}selected{{/isAirbnb}}>Airbnb</option>
                         <option value="Camping" {{#isCamping}}selected{{/isCamping}}>Camping</option>
                         <option value="Other" {{#isOtherAccommodation}}selected{{/isOtherAccommodation}}>Other</option>
                     </select>
-
                 </div>
+
+                
             </div>
 
             <!-- Notes Section -->

@@ -38,7 +38,7 @@
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-primary text-white fw-bold d-flex justify-content-between align-items-center">
                     <span>Trip In Progress</span>
-                    <a href="/mytrips" class="text-white small fw-bold">View All</a>
+                    <a href="/mytrips?status=ongoing" class="text-white small fw-bold">View All</a>
                 </div>
                 <div class="card-body">
                     {{#ongoing_trips}}
@@ -61,7 +61,7 @@
             <div class="card shadow-sm border-0 mt-4">
                 <div class="card-header bg-primary text-white fw-bold d-flex justify-content-between align-items-center">
                     <span>Upcoming Trips</span>
-                    <a href="/mytrips" class="text-white small fw-bold">View All</a>
+                    <a href="/mytrips?status=upcoming" class="text-white small fw-bold">View All</a>
                 </div>
                 <div class="card-body">
                     <div class="row g-3">
@@ -88,21 +88,34 @@
 
         <div class="col-md-4">
             <div class="card shadow-sm border-0 mb-4">
-                <div class="card-header bg-primary text-white fw-bold">Reminders</div>
+                <div class="card-header bg-primary text-white fw-bold d-flex justify-content-between align-items-center">
+                    <span>Reminders</span>
+                    {{#reminders.length}}<i class="fas fa-bell"></i>{{/reminders.length}}
+                </div>
                 <div class="card-body">
                     {{#reminders}}
-                    <p class="mb-2"><strong>{{start_date}}</strong> • {{destination_name}}</p>
+                    <div class="{{^last}}border-bottom pb-2 mb-2{{/last}}">
+                        <p class="fw-semibold text-primary mb-1">{{destination_name}}</p>
+                        <p class="text-muted small">{{start_date}}</p>
+                    </div>
                     {{/reminders}}
 
                     {{^reminders}}
-                    <p class="text-muted text-center">No reminders set.</p>
+                    <p class="text-muted text-center">No upcoming reminders</p>
                     {{/reminders}}
                 </div>
             </div>
 
 
+
             <div class="card shadow-sm border-0 mb-4">
-                <div class="card-header bg-primary text-white fw-bold">Completed Trips</div>
+                <div class="card-header bg-primary text-white fw-bold d-flex justify-content-between align-items-center">
+                    <span>Completed Trips</span>
+                    {{#completed_trips_all.length}}
+                    <a href="/mytrips?status=completed" class="text-white small fw-bold">View All</a>
+                    {{/completed_trips_all.length}}
+                </div>
+
                 <div class="card-body">
                     {{#completed_trips}}
                     <div class="trip-entry {{^last}}border-bottom mb-3 pb-3{{/last}} d-flex justify-content-between align-items-center">
@@ -117,16 +130,6 @@
                     {{^completed_trips}}
                     <p class="text-muted text-center">No past trips recorded</p>
                     {{/completed_trips}}
-                </div>
-            </div>
-
-
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-primary text-white fw-bold">Travel Stats</div>
-                <div class="card-body">
-                    <p><strong>Total Trips:</strong> {{trip_count}}</p>
-                    <p><strong>Total Budget:</strong> {{total_budget}}</p>
-                    <p><strong>Total Spent:</strong> {{total_spent}}</p>
                 </div>
             </div>
         </div>

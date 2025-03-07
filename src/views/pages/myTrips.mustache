@@ -68,6 +68,9 @@
             </section>
 
 
+            <div id="trip-error-message" class="alert alert-danger d-none"></div>
+
+
             <!-- Trip List Container -->
             <div class="row g-4">
                 {{#trips}}
@@ -118,11 +121,10 @@
                                     <a href="/edit/{{id}}?from=mytrips" class="trip-actions btn btn-outline-primary btn-sm">
                                         <i class="bi bi-pencil-square"></i>
                                     </a>
-                                    <form action="/complete/{{id}}" method="POST">
-                                        <button type="submit" class="btn btn-outline-success btn-sm">
-                                            <i class="bi bi-check-circle"></i>
-                                        </button>
-                                    </form>
+                        
+                                    <button class="btn btn-outline-success btn-sm" onclick="markTripAsCompleted('{{id}}')">
+                                        <i class="bi bi-check-circle"></i>
+                                    </button>
                                     <form action="/delete/{{id}}" method="POST">
                                         <button type="submit" class="btn btn-outline-danger btn-sm">
                                             <i class="bi bi-trash"></i>

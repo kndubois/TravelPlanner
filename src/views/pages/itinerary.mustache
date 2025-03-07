@@ -66,6 +66,8 @@
         {{/notes}}
     </div>
 
+
+    <!-- booking section -->
     <div class="card shadow-sm border-0 rounded-4 p-4 mb-4">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="fw-bold text-primary">Booking Details</h5>
@@ -78,6 +80,7 @@
                     <label class="fw-semibold">Type</label>
                     <input type="text" id="new-booking-type" class="form-control" required>
                 </div>
+
                 <div class="mb-2">
                     <label class="fw-semibold">Details</label>
                     <input type="text" id="new-booking-details" class="form-control" required>
@@ -125,7 +128,7 @@
     </div>
 
 
-
+    <!-- schedule -->
     <input type="hidden" id="trip-id" value="{{id}}">
     <div class="card shadow-sm border-0 rounded-4 p-4 mb-4">
         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -185,41 +188,42 @@
         </div>
     </div>
     
+    <!-- expense -->
     <div class="card shadow-sm border-0 rounded-4 p-4 mb-4">
-        <h5 class="fw-bold text-primary">Expense Tracker</h5>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold text-primary">Expense Tracker</h5>
+            <button class="btn btn-outline-primary btn-sm" onclick="toggleAddExpense()">+ Add Expense</button>
+        </div>
 
         <!-- Display Budget -->
         <div class="row g-3">
             <div class="col-md-6">
                 <p class="mb-1 fw-semibold">Total Budget</p>
-                <p class="text-muted">{{budget}}</p>
+                <p id="total-budget" class="text-muted" data-budget="{{budget}}">{{budget}}</p>
             </div>
             <div class="col-md-6">
                 <p class="mb-1 fw-semibold">Total Spent</p>
-                <p class="text-muted">{{total_spent}}</p>
+                <p id="total-spent" class="text-muted" data-spent="{{total_spent}}">{{total_spent}}</p>
             </div>
         </div>
 
-        <hr class="my-3">
 
-        <div class="mb-3">
-            <h6 class="fw-bold text-primary">Add Expense</h6>
-            <form onsubmit="submitExpense(event, '{{id}}')">
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <label class="fw-semibold">Expense Name</label>
-                        <input type="text" class="form-control" id="expense-name" required>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="fw-semibold">Amount ($)</label>
-                        <input type="number" class="form-control" id="expense-amount" required>
-                    </div>
+        <div id="add-expense-form" class="d-none mb-3 p-3 border rounded-3">
+            <form onsubmit="submitExpense(event)">
+                <div class="mb-2">
+                    <label class="fw-semibold">Expense Name</label>
+                    <input type="text" id="expense-name" class="form-control" required>
                 </div>
-                <button type="submit" class="btn btn-primary btn-sm mt-3">Add Expense</button>
+                <div class="mb-2">
+                    <label class="fw-semibold">Amount ($)</label>
+                    <input type="number" id="expense-amount" class="form-control" required>
+                </div>
+                <div class="d-flex justify-content-end gap-2">
+                    <button type="submit" class="btn btn-primary btn-sm">Save</button>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="toggleAddExpense()">Cancel</button>
+                </div>
             </form>
         </div>
-
-        <h6 class="fw-bold text-primary mt-4">Expense History</h6>
 
         <div id="expense-list">
             {{#expenses}}
@@ -255,6 +259,7 @@
             {{/expenses}}
         </div>
     </div>
+
 
 
     <div class="text-center">
