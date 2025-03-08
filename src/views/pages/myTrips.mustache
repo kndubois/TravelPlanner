@@ -24,9 +24,9 @@
                         <label for="status" class="form-label fw-semibold">Status</label>
                         <select class="form-select" id="status" name="status">
                             <option value="" {{^filters.status}}selected{{/filters.status}}>All</option>
-                            <option value="ongoing" {{#filters.status}}{{#is_ongoing}}selected{{/is_ongoing}}{{/filters.status}}>Ongoing</option>
-                            <option value="upcoming" {{#filters.status}}{{#is_upcoming}}selected{{/is_upcoming}}{{/filters.status}}>Upcoming</option>
-                            <option value="completed" {{#filters.status}}{{#is_completed}}selected{{/is_completed}}{{/filters.status}}>Completed</option>
+                            <option value="ongoing" {{#isStatusOngoing}}selected{{/isStatusOngoing}}>Ongoing</option>
+                            <option value="upcoming" {{#isStatusUpcoming}}selected{{/isStatusUpcoming}}>Upcoming</option>
+                            <option value="completed" {{#isStatusCompleted}}selected{{/isStatusCompleted}}>Completed</option>
                         </select>
                     </div>
 

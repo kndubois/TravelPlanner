@@ -267,7 +267,11 @@ router.get('/mytrips', requireLogin, (req, res) => {
     
 
     tripModel.getFilteredTrips(filters, (trips) => {
+
         const today = new Date();
+        const isStatusOngoing = filters.status === 'ongoing';
+        const isStatusUpcoming = filters.status === 'upcoming';
+        const isStatusCompleted = filters.status === 'completed';
 
         trips.forEach(trip => {
             const startDate = new Date(trip.start_date);
@@ -293,10 +297,22 @@ router.get('/mytrips', requireLogin, (req, res) => {
             return true;
         });
         
+        const filterFlags = {
+            is_high: filters.priority === "High",
+            is_medium: filters.priority === "Medium",
+            is_low: filters.priority === "Low",
+            is_ongoing: filters.status === "ongoing",
+            is_upcoming: filters.status === "upcoming",
+            is_completed: filters.status === "completed"
+        };
+
 
         res.render('pages/mytrips', { 
             trips, 
-            filters,
+            filters: { ...filters, ...filterFlags },
+            isStatusOngoing,
+            isStatusUpcoming,
+            isStatusCompleted,
             user: req.session.user
         });
     });
