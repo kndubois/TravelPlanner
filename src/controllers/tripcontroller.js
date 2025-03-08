@@ -5,20 +5,16 @@ const router = express.Router();
 const tripModel = require('../models/tripModel');
 
 
-const formatDate = (dateString) => {
-    if (!dateString || isNaN(new Date(dateString))) return 'N/A';
-    const date = new Date(dateString);
-    
-    return date.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-    });
+
+const requireAuth = (req, res, next) => {
+    if (!req.session.user) return res.redirect('/login');
+    next();
 };
 
 
+// sign up and log in
 
-// Middleware to check if user is logged in
+
 const requireLogin = (req, res, next) => {
     if (!req.session.user) {
         return res.redirect('/login');
@@ -26,23 +22,6 @@ const requireLogin = (req, res, next) => {
     next();
 };
 
-const formatCommas = (number) => { return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'CAD' }).format(number); };
-
-
-// Middleware to check authentication
-const requireAuth = (req, res, next) => {
-    if (!req.session.user) return res.redirect('/login');
-    next();
-};
-
-
-// GET Homepage - Show homepage with login status
-router.get('/', (req, res) => {
-    res.render('pages/homepage', { isHomepage: true, user: req.session.user });
-});
-
-
-// GET Sign Up Page
 router.get('/signup', (req, res) => {
     res.render('pages/signup', { isSignupPage: true, isLoginPage: false, isHomepage: false, user: req.session.user });
 });
@@ -88,16 +67,14 @@ router.post('/signup', async (req, res) => {
 });
 
 
-// GET Sign In Page
 router.get('/login', (req, res) => {
     res.render('pages/login', { isLoginPage: true, isSignupPage: false, isHomepage: false, user: req.session.user });
 });
 
+router.post('/login', async (req, res) => {
 
-// POST Register
-router.post('/login', (req, res) => {
     const { email, password } = req.body;
-    
+
     tripModel.findUserByEmail(email, (user) => {
         if (!user || !bcrypt.compareSync(password, user.password)) {
             return res.render('pages/login', { 
@@ -106,37 +83,30 @@ router.post('/login', (req, res) => {
                 user: req.session.user 
             });
         }
-        req.session.user = user;
+
+        req.session.user = {
+            id: user.id,
+            username: user.username,
+            name: user.name,
+            email: user.email,
+            default_currency: user.default_currency,
+            timezone: user.timezone,
+            theme: user.theme,
+            language: user.language
+          };
+
+
         res.redirect('/dashboard');
     });
 });
 
-
-router.get('/login', (req, res) => {
-    res.render('login');
-});
-
-
-router.post('/login', async (req, res) => {
-    const { email, password } = req.body;
-
-    tripModel.findUserByEmail(email, async (user) => {
-        if (!user || !bcrypt.compareSync(password, user.password)) {
-            return res.status(400).send("Invalid email or password");
-        }
-        req.session.user = { id: user.id, username: user.username };
-        res.redirect('/dashboard');
-    });
-});
-
-// logout
 router.get('/logout', (req, res) => {
     req.session.destroy(() => {
         res.redirect('/login');
     });
 });
 
-// POST Logout 
+
 router.post('/logout', (req, res) => {
     req.session.destroy(() => {
         res.redirect('/login');
@@ -144,16 +114,50 @@ router.post('/logout', (req, res) => {
 });
 
 
-// GET Dashboard (Protected)
+// for completed trips
+
+const oldDuration = (dateString) => {
+    const endDate = new Date(dateString);
+    const today = new Date();
+    const timeDiff = today - endDate;
+    return Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+};
+
+
+const formatDate = (dateString) => {
+    if (!dateString || isNaN(new Date(dateString))) return 'N/A';
+    const date = new Date(dateString);
+    
+    return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+};
+
+
+const formatCommas = (number) => { return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'CAD' }).format(number); };
+
+
+router.get('/', (req, res) => {
+    res.render('pages/homepage', { isHomepage: true, user: req.session.user });
+});
+
+
+
+// dashboard
+
 router.get('/dashboard', requireLogin, (req, res) => {
 
-    tripModel.getAllTrips((trips) => {
+    const user_id = req.session.user.id;
+
+    tripModel.getAllTripsByUser(user_id, (trips) => {
 
         const today = new Date();
         let totalSpent = 0;
         let tripsProcessed = 0;
 
-        // If there are no trips at all, render the dashboard immediately
+
         if (trips.length === 0) {
             return res.render('pages/dashboard', {
                 trips: [],
@@ -173,7 +177,7 @@ router.get('/dashboard', requireLogin, (req, res) => {
             });
         }
 
-        // Prepare trips data
+
         trips.forEach(trip => {
             trip.budget = formatCommas(trip.budget);
             const startDate = new Date(trip.start_date);
@@ -190,12 +194,12 @@ router.get('/dashboard', requireLogin, (req, res) => {
             }
         });
 
-        // Categorize trips
+
         let ongoingTrips = trips.filter(trip => !trip.is_completed && new Date(trip.start_date) <= today && new Date(trip.end_date) >= today);
         let upcomingTrips = trips.filter(trip => !trip.is_completed && new Date(trip.start_date) > today);
         let completedTrips = trips.filter(trip => trip.is_completed);
 
-        // Ensure completed trips are sorted by most recent first
+
         completedTrips.sort((a, b) => new Date(b.end_date) - new Date(a.end_date));
 
         completedTrips.forEach((trip, index) => {
@@ -214,14 +218,13 @@ router.get('/dashboard', requireLogin, (req, res) => {
                 last: index === array.length - 1
             }));
 
-        // Fetch expenses for all trips
         trips.forEach(trip => {
             tripModel.getExpensesByTripId(trip.id, (expenses) => {
                 trip.total_spent = expenses.reduce((sum, expense) => sum + expense.amount, 0);
                 totalSpent += trip.total_spent;
                 tripsProcessed++;
 
-                // Ensure all trips are processed before rendering
+
                 if (tripsProcessed === trips.length) {
                     res.render('pages/dashboard', {
                         trips,
@@ -245,17 +248,12 @@ router.get('/dashboard', requireLogin, (req, res) => {
 });
 
 
+// trips
 
-const oldDuration = (dateString) => {
-    const endDate = new Date(dateString);
-    const today = new Date();
-    const timeDiff = today - endDate;
-    return Math.floor(timeDiff / (1000 * 60 * 60 * 24));
-};
-
-
-// GET My Trips Page with Filters
 router.get('/mytrips', requireLogin, (req, res) => {
+
+    const user_id = req.session.user.id;
+
     const filters = {
         priority: req.query.priority || null,
         category: req.query.category || null,
@@ -266,7 +264,7 @@ router.get('/mytrips', requireLogin, (req, res) => {
     };
     
 
-    tripModel.getFilteredTrips(filters, (trips) => {
+    tripModel.getFilteredTripsByUser(user_id, filters, (trips) => {
 
         const today = new Date();
         const isStatusOngoing = filters.status === 'ongoing';
@@ -319,7 +317,6 @@ router.get('/mytrips', requireLogin, (req, res) => {
 });
 
 
-// GET Add Trip Page (Pre-filled from Explore Page)
 router.get('/add-trip', requireLogin, (req, res) => {
 
     const { destination } = req.query;
@@ -327,57 +324,37 @@ router.get('/add-trip', requireLogin, (req, res) => {
 });
 
 
-// POST create a new trip
-router.post('/add', requireLogin, (req, res) => {
+
+// itinerary
+
+router.get('/itinerary/:id', requireLogin, (req, res) => {
 
     const user_id = req.session.user.id;
 
-    let { destination, destination_name, start_date, end_date, budget, notes, reminder, priority, category, transportation, accommodation, transportation_details, accommodation_details } = req.body;
-
-
-    if (!destination_name || !destination || destination.length < 3 || budget <= 0) {
-        return res.status(400).send("Invalid input: Destination must be at least 3 characters, and budget must be positive.");
-    }
-
-    if (new Date(end_date) < new Date(start_date)) {
-        return res.status(400).send("Error: End date cannot be before start date.");
-    }
-
-    tripModel.addTrip({ destination, destination_name, start_date, end_date, budget, notes, reminder, priority, category, transportation, accommodation, transportation_details, accommodation_details }, user_id, () => {
-        res.redirect('/mytrips');
-    });
-});
-
-
-
-
-router.get('/itinerary/:id', requireLogin, (req, res) => {
     const tripId = parseInt(req.params.id, 10);
 
-    tripModel.getTripById(tripId, (trip) => {
+    tripModel.getTripByIdForUser(user_id, tripId, (trip) => {
         if (!trip) {
             return res.status(404).send("Trip not found");
         }
 
         tripModel.getExpensesByTripId(tripId, (expenses) => {
-            // Map expenses to include both numeric amount and formattedAmount
+
             trip.expenses = expenses.map(expense => ({
                 ...expense,
                 formattedAmount: `$${expense.amount.toFixed(2)}`
             })) || [];
 
-            // Calculate total spent using the numeric amount
             trip.total_spent = expenses.reduce((sum, expense) => sum + expense.amount, 0) || 0;
             trip.remaining_budget = trip.budget - trip.total_spent;
 
-            // Rest of the code remains unchanged
             tripModel.getScheduleByTripId(tripId, (schedule) => {
                 trip.schedule = schedule.map(item => ({
                     ...item,
                     formatted_date: formatDate(item.date)
                 })) || [];
 
-                tripModel.getBookingsByTripId(tripId, (bookings) => {
+                tripModel.getBookingsByTripIdForUser(user_id, tripId, (bookings) => {
                     trip.bookings = bookings || [];
 
                     const itineraryData = {
@@ -452,7 +429,6 @@ router.post('/itinerary/:id/delete-schedule/:scheduleId', requireLogin, (req, re
 });
 
 
-// Add Booking
 router.post('/itinerary/:id/add-booking', requireLogin, (req, res) => {
 
     const tripId = req.params.id;
@@ -469,7 +445,6 @@ router.post('/itinerary/:id/add-booking', requireLogin, (req, res) => {
 
 
 
-// Edit Booking
 router.post('/itinerary/:id/edit-booking/:bookingId', requireLogin, (req, res) => {
     const { bookingId } = req.params;
     const { type, details, departure_time, arrival_time, hotel_name, check_in_date, check_out_date, pickup_location, dropoff_location, pickup_date, dropoff_date, departure_airport, arrival_airport, departure_port, arrival_port, cruise_line, departure_station, arrival_station, train_number, departure_terminal, arrival_terminal, bus_number } = req.body;
@@ -483,7 +458,6 @@ router.post('/itinerary/:id/edit-booking/:bookingId', requireLogin, (req, res) =
 });
 
 
-// Delete Booking
 router.post('/itinerary/:id/delete-booking/:bookingId', requireLogin, (req, res) => {
     const { bookingId } = req.params;
 
@@ -497,7 +471,6 @@ router.post('/itinerary/:id/delete-booking/:bookingId', requireLogin, (req, res)
 
 
 
-// POST Add Expense to a Trip
 router.post('/itinerary/:id/add-expense', requireLogin, (req, res) => {
 
     const tripId = parseInt(req.params.id, 10);
@@ -516,8 +489,9 @@ router.post('/itinerary/:id/add-expense', requireLogin, (req, res) => {
 });
 
 
-// POST Delete Expense
+
 router.post('/itinerary/:id/edit-expense/:expenseId', requireLogin, (req, res) => {
+
     const { expenseId } = req.params;
     const { name, amount } = req.body;
 
@@ -542,10 +516,33 @@ router.post('/itinerary/:id/delete-expense/:expenseId', requireLogin, (req, res)
 });
 
 
+// important
 
-// GET Edit Trip Page
+
+router.post('/add', requireLogin, (req, res) => {
+
+    const user_id = req.session.user.id;
+
+    let { destination, destination_name, start_date, end_date, budget, notes, reminder, priority, category, transportation, accommodation, transportation_details, accommodation_details } = req.body;
+
+
+    if (!destination_name || !destination || destination.length < 3 || budget <= 0) {
+        return res.status(400).send("Invalid input: Destination must be at least 3 characters, and budget must be positive.");
+    }
+
+    if (new Date(end_date) < new Date(start_date)) {
+        return res.status(400).send("Error: End date cannot be before start date.");
+    }
+
+    tripModel.addTrip({ destination, destination_name, start_date, end_date, budget, notes, reminder, priority, category, transportation, accommodation, transportation_details, accommodation_details }, user_id, () => {
+        res.redirect('/mytrips');
+    });
+});
+
 router.get('/edit/:id', requireLogin, (req, res) => {
     
+    const user_id = req.session.user.id;
+
     const id = req.params.id;
 
     const success = req.query.success === "true";
@@ -554,10 +551,11 @@ router.get('/edit/:id', requireLogin, (req, res) => {
     const from_itinerary = req.query.from === "itinerary";
     const from_mytrips = req.query.from === "mytrips";
 
-    tripModel.getTripById(id, (trip) => {
+    tripModel.getTripByIdForUser(user_id, id, (trip) => {
         if (!trip) {
             return res.status(404).send("Trip not found");
         }
+
         res.render('templates/editTrip', { 
             trip, 
             success, 
@@ -603,11 +601,13 @@ router.post('/edit/:id', requireLogin, (req, res) => {
 
 
 
-// POST mark a trip as completed
 router.post('/complete/:id', requireLogin, (req, res) => {
+    
+    const user_id = req.session.user.id;
+
     const id = req.params.id;
 
-    tripModel.getTripById(id, (trip) => {
+    tripModel.getTripByIdForUser(user_id, id, (trip) => {
         if (!trip) {
             return res.status(404).json({ success: false, message: "Trip not found" });
         }
@@ -626,7 +626,6 @@ router.post('/complete/:id', requireLogin, (req, res) => {
 });
 
 
-// POST delete a trip
 router.post('/delete/:id', requireLogin, (req, res) => {
     const id = req.params.id;
     tripModel.deleteTrip(id, () => {
@@ -634,7 +633,8 @@ router.post('/delete/:id', requireLogin, (req, res) => {
     });
 });
 
-// GET filter trips by category
+// filters
+
 router.get('/category/:category', (req, res) => {
     const category = req.params.category;
     tripModel.filterTripsByCategory(category, (trips) => {
@@ -642,15 +642,15 @@ router.get('/category/:category', (req, res) => {
     });
 });
 
-// GET prioritized trips
+
 router.get('/priority', (req, res) => {
     tripModel.getPrioritizedTrips((trips) => {
         res.render('index', { trips });
     });
 });
 
+// explore page
 
-// GET Explore Page
 router.get('/explore', requireLogin, (req, res) => {
     const suggestedTrips = [
         { destination: 'Paris', best_time: 'Spring', budget: '$2,000', category: "Europe", image: "/images/paris.jpg" },
@@ -672,45 +672,6 @@ router.get('/explore', requireLogin, (req, res) => {
 });
 
 
-// GET Settings Page
-
-router.get('/settings', requireLogin, (req, res) => {
-    tripModel.getUserById(req.session.user.id, (user) => {
-        
-        if (!user) return res.redirect('/login');
-
-        const success = req.query.success === "true";
-        const error   = req.query.error   === "true";
-
-        res.render('pages/settings', { user: req.session.user, success, error });
-    });
-});
-
-// POST Update Settings
-router.post('/update-settings', requireLogin, async (req, res) => {
-    const userId = req.session.user.id;
-    const { name, username, email, password, default_currency, timezone, theme, language } = req.body;
-
-    let hashedPassword = null;
-    if (password) {
-        const saltRounds = 10;
-        hashedPassword = await bcrypt.hash(password, Number(saltRounds));
-    }
-
-    tripModel.updateUser(userId, { name, username, email, hashedPassword, default_currency, timezone, theme, language }, (err) => {
-        if (err) return res.redirect('/settings?error=true');
-
-        req.session.user.name  = name;
-        req.session.user.username = username;
-        req.session.user.email = email;
-        req.session.user.password = hashedPassword;
-
-        res.redirect('/settings?success=true');
-    });
-});
-
-
-// GET Travel Tips Page
 router.get('/tips', (req, res) => {
     const tips = [
         { title: "Pack Smart", category: "packing", content: "Roll your clothes to save space and avoid wrinkles." },
@@ -723,6 +684,57 @@ router.get('/tips', (req, res) => {
 });
 
 
+
+
+// settings
+router.get('/settings', requireLogin, (req, res) => {
+
+    tripModel.getUserById(req.session.user.id, (user) => {
+        
+        if (!user) return res.redirect('/login');
+
+        const success = req.query.success === "true";
+        const error   = req.query.error   === "true";
+
+        req.session.user = {
+            id: user.id,
+            name: user.name,
+            username: user.username,
+            email: user.email,
+            default_currency: user.default_currency,
+            timezone: user.timezone,
+            theme: user.theme,
+            language: user.language
+          };
+
+        res.render('pages/settings', { user, success, error });
+    });
+});
+
+
+router.post('/update-settings', requireLogin, async (req, res) => {
+    
+    const user_id = req.session.user.id;
+
+    const { name, username, email, password, default_currency, timezone, theme, language } = req.body;
+
+    let hashedPassword = null;
+    if (password) {
+        const saltRounds = 10;
+        hashedPassword = await bcrypt.hash(password, Number(saltRounds));
+    }
+
+    tripModel.updateUser(user_id, { name, username, email, hashedPassword, default_currency, timezone, theme, language }, (err) => {
+        if (err) return res.redirect('/settings?error=true');
+
+        req.session.user.name  = name;
+        req.session.user.username = username;
+        req.session.user.email = email;
+        req.session.user.password = hashedPassword;
+
+        res.redirect('/settings?success=true');
+    });
+});
 
 
 module.exports = router;
