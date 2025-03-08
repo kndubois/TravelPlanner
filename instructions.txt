@@ -1,0 +1,18 @@
+localhost: http://localhost:3000/
+
+to install dependancies
+-- npm install
+
+packages that are included
+- express mustache-express express-session sqlite3 
+- bcryptjs@2.4.3
+- connect-flash passport passport-local
+- dotenv 
+
+node.js
+- npm install node.js
+- node app.js
+
+run the application
+- node app.js
+- ctrl + c to refresh

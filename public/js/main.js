@@ -339,25 +339,31 @@ function toggleAddExpense() {
 }
 
 
-
-function toggleEditExpense(expenseId) {
+function toggleEditExpense(expenseId, forceClose = false) {
     let form = document.getElementById(`edit-expense-form-${expenseId}`);
     if (form) {
-        form.classList.toggle("d-none");
+        if (forceClose) {
+            form.classList.add("d-none"); // Force close after saving
+        } else {
+            form.classList.toggle("d-none");
+        }
     } else {
         console.error(`⚠️ Edit form not found for Expense ID ${expenseId}`);
     }
 }
 
+
 function updateTotalSpent() {
     let totalSpentElement = document.getElementById("total-spent");
-    let expenses = document.querySelectorAll("#expense-list .expense-amount");
+    let expenses = document.querySelectorAll(".expense-amount");
     let total = 0;
-
     expenses.forEach(expense => {
-        total += parseFloat(expense.textContent.replace("$", "")) || 0;
+        let amountText = expense.textContent.replace(/[^0-9.-]+/g, "");
+        let amount = parseFloat(amountText);
+        if (!isNaN(amount)) {
+            total += amount;
+        }
     });
-
     totalSpentElement.innerText = `$${total.toFixed(2)}`;
     totalSpentElement.dataset.spent = total;
 }
@@ -386,31 +392,17 @@ function submitExpense(event) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Create new expense in UI
-            let expenseList = document.getElementById("expense-list");
-            let newExpense = document.createElement("div");
-            newExpense.id = `expense-${data.id}`;
-            newExpense.className = "border rounded p-3 mb-2 shadow-sm d-flex justify-content-between align-items-center";
-            newExpense.innerHTML = `
-                <div>
-                    <p class="fw-semibold text-primary mb-1">${data.name}</p>
-                    <p class="text-muted small expense-amount">$${data.amount.toFixed(2)}</p>
-                </div>
-                <div>
-                    <button class="btn btn-sm btn-outline-secondary me-1" onclick="toggleEditExpense('${data.id}')">Edit</button>
-                    <button class="btn btn-sm btn-outline-danger" onclick="deleteExpense('${data.id}', '${tripId}')">Delete</button>
-                </div>
-            `;
-
-            expenseList.appendChild(newExpense);
-
-            // Update Total Spent
-            updateTotalSpent();
-
-            // Reset form fields
+            // Refresh the expense list from the server
+            fetch(`/itinerary/${tripId}`)
+                .then(response => response.text())
+                .then(html => {
+                    let parser = new DOMParser();
+                    let doc = parser.parseFromString(html, "text/html");
+                    document.getElementById("expense-list").innerHTML = doc.querySelector("#expense-list").innerHTML;
+                    updateTotalSpent(); // Update total if you have this function
+                });
             document.getElementById("expense-name").value = "";
             document.getElementById("expense-amount").value = "";
-
             toggleAddExpense();
         } else {
             console.error("Failed to add expense.");
@@ -419,27 +411,10 @@ function submitExpense(event) {
     .catch(err => console.error("Error:", err));
 }
 
-
 function updateExpense(event, expenseId, tripId) {
-    event.preventDefault(); // Prevent form from refreshing
-
+    event.preventDefault();
     let name = document.getElementById(`edit-expense-name-${expenseId}`).value.trim();
     let newAmount = parseFloat(document.getElementById(`edit-expense-amount-${expenseId}`).value);
-
-    if (!name || isNaN(newAmount) || newAmount <= 0) {
-        console.error("Invalid expense data.");
-        return;
-    }
-
-    let expenseElement = document.getElementById(`expense-${expenseId}`);
-    let oldAmountElement = expenseElement.querySelector(".expense-amount");
-
-    if (!oldAmountElement) {
-        console.error("Error: Could not find expense amount element.");
-        return;
-    }
-
-    let oldAmount = parseFloat(oldAmountElement.textContent.replace("$", "")) || 0;
 
     fetch(`/itinerary/${tripId}/edit-expense/${expenseId}`, {
         method: "POST",
@@ -449,20 +424,21 @@ function updateExpense(event, expenseId, tripId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Update UI with new expense name and amount
-            oldAmountElement.textContent = `$${newAmount.toFixed(2)}`;
-            expenseElement.querySelector(".fw-semibold").textContent = name;
-
-            // Recalculate Total Spent by summing all expenses
-            updateTotalSpent();
-
-            // Hide the edit form
-            toggleEditExpense(expenseId);
+            // Refresh the expense list from the server
+            fetch(`/itinerary/${tripId}`)
+                .then(response => response.text())
+                .then(html => {
+                    let parser = new DOMParser();
+                    let doc = parser.parseFromString(html, "text/html");
+                    document.getElementById("expense-list").innerHTML = doc.querySelector("#expense-list").innerHTML;
+                    updateTotalSpent(); // Update total if you have this function
+                });
+            toggleEditExpense(expenseId, true);
         } else {
             console.error("Failed to update expense.");
         }
     })
-    .catch(err => console.error("Error updating expense:", err));
+    .catch(err => console.error("Error:", err));
 }
 
 

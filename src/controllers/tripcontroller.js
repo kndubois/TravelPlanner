@@ -334,34 +334,35 @@ router.post('/add', requireLogin, (req, res) => {
 
 
 
-// GET Itinerary Page
-router.get('/itinerary/:id', requireLogin, (req, res) => {
 
+router.get('/itinerary/:id', requireLogin, (req, res) => {
     const tripId = parseInt(req.params.id, 10);
 
     tripModel.getTripById(tripId, (trip) => {
-
         if (!trip) {
             return res.status(404).send("Trip not found");
         }
 
         tripModel.getExpensesByTripId(tripId, (expenses) => {
+            // Map expenses to include both numeric amount and formattedAmount
+            trip.expenses = expenses.map(expense => ({
+                ...expense,
+                formattedAmount: `$${expense.amount.toFixed(2)}`
+            })) || [];
 
-            trip.expenses = expenses || [];
-            trip.total_spent = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+            // Calculate total spent using the numeric amount
+            trip.total_spent = expenses.reduce((sum, expense) => sum + expense.amount, 0) || 0;
             trip.remaining_budget = trip.budget - trip.total_spent;
 
+            // Rest of the code remains unchanged
             tripModel.getScheduleByTripId(tripId, (schedule) => {
-                trip.schedule = schedule || []; 
-                trip.schedule = trip.schedule.map(item => ({
+                trip.schedule = schedule.map(item => ({
                     ...item,
-                    formatted_date: formatDate(item.date)  
-                }));
+                    formatted_date: formatDate(item.date)
+                })) || [];
 
-                // Fetch bookings data
                 tripModel.getBookingsByTripId(tripId, (bookings) => {
-
-                    trip.bookings = bookings || [];  
+                    trip.bookings = bookings || [];
 
                     const itineraryData = {
                         id: trip.id,
@@ -376,24 +377,25 @@ router.get('/itinerary/:id', requireLogin, (req, res) => {
                         priority: trip.priority,
                         notes: trip.notes || "",
                         reminder: trip.reminder || "No reminder set",
-                        total_spent: formatCommas(trip.total_spent || 0),
-                        remaining_budget: formatCommas(trip.budget - (trip.total_spent || 0)),
+                        total_spent: formatCommas(trip.total_spent),
+                        remaining_budget: formatCommas(trip.remaining_budget),
                         transportation: trip.transportation || "Not specified",
                         transportation_details: trip.transportation_details || "Not specified",
                         accommodation: trip.accommodation || "Not specified",
                         accommodation_details: trip.accommodation_details || "Not specified",
-                        schedule: trip.schedule || [],
-                        bookings: trip.bookings || [],
-                        expenses: trip.expenses || [],
-
+                        schedule: trip.schedule,
+                        bookings: trip.bookings,
+                        expenses: trip.expenses,
                         user: req.session.user
                     };
+
                     res.render('pages/itinerary', itineraryData);
                 });
             });
         });
     });
 });
+
 
 
 router.post('/itinerary/:id/add-schedule', requireLogin, (req, res) => {
