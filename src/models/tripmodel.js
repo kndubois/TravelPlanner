@@ -335,7 +335,7 @@ const deleteSchedule = (id, callback) => {
 
 const getScheduleByTripId = (tripId, callback) => {
     
-    db.all(`SELECT * FROM schedule WHERE trip_id = ?`, [tripId], (err, rows) => {
+    db.all(`SELECT * FROM schedule WHERE trip_id = ? ORDER BY date ASC`, [tripId], (err, rows) => {
         if (err) {
             return callback([]);
         }

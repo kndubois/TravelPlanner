@@ -105,8 +105,6 @@ function submitNewSchedule(event, tripId) {
     let date = document.getElementById("new-schedule-date").value;
     let activities = document.getElementById("new-schedule-activities").value;
 
-    console.log("Submitting Schedule:", { tripId, date, activities });
-
     fetch(`/itinerary/${tripId}/add-schedule`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -126,7 +124,7 @@ function submitNewSchedule(event, tripId) {
                         document.getElementById("schedule-list").innerHTML = updatedSchedule;
                     }
                 });
-
+            document.getElementById("new-schedule-form").reset();
             document.getElementById("add-schedule-form").classList.add("d-none");
         } else {
             alert("Failed to add schedule: " + data.message);

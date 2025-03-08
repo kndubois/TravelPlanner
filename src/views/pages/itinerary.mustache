@@ -61,7 +61,7 @@
         {{#notes}}
         <div class="mt-4 p-3 border rounded bg-light text-dark">
             <h6 class="fw-bold text-primary text-uppercase mb-2">Additional Notes</h6>
-            <p class="mb-0">{{notes}}</p>
+            <p class="mb-0">{{{notes}}}</p>
         </div>
         {{/notes}}
     </div>
@@ -137,7 +137,7 @@
         </div>
 
         <div id="add-schedule-form" class="d-none mb-3 p-3 border rounded-3">
-            <form onsubmit="submitNewSchedule(event)">
+            <form id="new-schedule-form" onsubmit="submitNewSchedule(event)">
                 <div class="mb-2">
                     <label class="fw-semibold">Date</label>
                     <input type="date" id="new-schedule-date" class="form-control" required>

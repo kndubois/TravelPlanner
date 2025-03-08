@@ -23,7 +23,12 @@ const requireLogin = (req, res, next) => {
 };
 
 router.get('/signup', (req, res) => {
-    res.render('pages/signup', { isSignupPage: true, isLoginPage: false, isHomepage: false, user: req.session.user });
+    res.render('pages/signup', { 
+        isSignupPage: true, 
+        isLoginPage: false, 
+        isHomepage: false, 
+        user: req.session.user 
+    });
 });
 
 router.post('/signup', async (req, res) => {
@@ -38,6 +43,14 @@ router.post('/signup', async (req, res) => {
                 isSignupPage: true, 
                 errorMessage: "All fields are required.", 
                 user: req.session.user 
+            });
+        }
+
+        if (username === email) {
+            return res.render('pages/signup', {
+                isSignupPage: true,
+                errorMessage: "Username cannot be the same as your email.",
+                user: req.session.user
             });
         }
 
@@ -126,15 +139,15 @@ const oldDuration = (dateString) => {
 
 const formatDate = (dateString) => {
     if (!dateString || isNaN(new Date(dateString))) return 'N/A';
-    const date = new Date(dateString);
     
-    return date.toLocaleDateString('en-US', {
+    const localDate = new Date(`${dateString}T00:00:00`);
+    
+    return localDate.toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'long',
         day: 'numeric'
     });
 };
-
 
 const formatCommas = (number) => { return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'CAD' }).format(number); };
 
@@ -355,6 +368,7 @@ router.get('/itinerary/:id', requireLogin, (req, res) => {
                 })) || [];
 
                 tripModel.getBookingsByTripIdForUser(user_id, tripId, (bookings) => {
+                    
                     trip.bookings = bookings || [];
 
                     const itineraryData = {
@@ -368,7 +382,7 @@ router.get('/itinerary/:id', requireLogin, (req, res) => {
                         budget: formatCommas(trip.budget),
                         category: trip.category || "Uncategorized",
                         priority: trip.priority,
-                        notes: trip.notes || "",
+                        notes: trip.notes ? trip.notes.replace(/\n/g, '<br>') : "",
                         reminder: trip.reminder || "No reminder set",
                         total_spent: formatCommas(trip.total_spent),
                         remaining_budget: formatCommas(trip.remaining_budget),
@@ -396,11 +410,11 @@ router.post('/itinerary/:id/add-schedule', requireLogin, (req, res) => {
     const tripId = req.params.id;
     const { date, activities } = req.body;
 
-    tripModel.addScheduleItem(tripId, { date, activities }, (success) => {
+    tripModel.addScheduleItem(tripId, { date, activities }, (success, scheduleId) => {
         if (!success) {
             return res.status(500).json({ success: false, message: "Failed to add schedule." });
         }
-        res.json({ success: true, message: "Schedule added successfully." });
+        res.json({ success: true, id: scheduleId, date, activities });
     });
 });
 
