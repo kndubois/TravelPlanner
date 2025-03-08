@@ -92,7 +92,6 @@ const createUser = (user, callback) => {
         [name, username, email, password],
         function (err) {
             if (err) {
-                console.error("Error inserting user:", err);
                 return callback(err);
             }
             callback(null);
@@ -103,7 +102,6 @@ const createUser = (user, callback) => {
 const getUserById = (id, callback) => {
     db.get("SELECT * FROM users WHERE id = ?", [id], (err, row) => {
         if (err) {
-            console.error("Error fetching user:", err);
             return callback(null);
         }
         callback(row);
@@ -131,7 +129,6 @@ const updateUser = (id, user, callback) => {
 
     db.run(query, params, function (err) {
         if (err) {
-            console.error("Error updating user:", err);
             return callback(err);
         }
         callback(null);
@@ -176,7 +173,6 @@ const addTrip = (trip, user_id, callback) => {
     );
 };
 
-// Update an existing trip
 const updateTrip = (id, trip, callback) => {
     const { destination_name, destination, start_date, end_date, budget, notes, reminder, priority, category, transportation, accommodation, transportation_details, accommodation_details } = trip;
     
@@ -216,11 +212,9 @@ const markTripCompleted = (id, callback) => {
 };
 
 
-// Get a single trip by ID
 const getTripById = (id, callback) => {
     db.get("SELECT * FROM trips WHERE id = ?", [id], (err, row) => {
         if (err) {
-            console.error(err);
             return callback(null);
         }
         callback(row);
@@ -254,7 +248,6 @@ const getFilteredTrips = (filters, callback) => {
 
     db.all(query, params, (err, rows) => {
         if (err) {
-            console.error("Error fetching trips:", err);
             return callback([]);
         }
         const today = new Date();
@@ -304,7 +297,6 @@ const updateSchedule = (id, schedule, callback) => {
         [date, activities, id],
         function (err) {
             if (err) {
-                console.error("Error updating schedule:", err);
                 return callback(false);
             }
             callback(true);
@@ -315,7 +307,6 @@ const updateSchedule = (id, schedule, callback) => {
 const deleteSchedule = (id, callback) => {
     db.run("DELETE FROM schedule WHERE id = ?", [id], function (err) {
         if (err) {
-            console.error("Error deleting schedule:", err);
             return callback(false);
         }
         callback(true);
@@ -326,7 +317,6 @@ const getScheduleByTripId = (tripId, callback) => {
     
     db.all("SELECT * FROM schedule WHERE trip_id = ?", [tripId], (err, rows) => {
         if (err) {
-            console.error("Error fetching schedule:", err);
             return callback([]);
         }
         callback(rows);
@@ -340,7 +330,6 @@ const addBooking = (tripId, booking, callback) => {
         [tripId, type, details, departure_time, departure_airport, arrival_time, arrival_airport, hotel_name, check_in_date, check_out_date, pickup_location, dropoff_location, pickup_date, dropoff_date, departure_port, arrival_port, cruise_line, departure_station, arrival_station, train_number, departure_terminal, arrival_terminal, bus_number],
         function (err) {
             if (err) {
-                console.error("Error adding booking:", err);
                 return callback(false);
             }
             callback(true, this.lastID);
@@ -354,7 +343,6 @@ const updateBooking = (id, booking, callback) => {
         [type, details, departure_time, departure_airport, arrival_time, arrival_airport, hotel_name, check_in_date, check_out_date, pickup_location, dropoff_location, pickup_date, dropoff_date, departure_port, arrival_port, cruise_line, departure_station, arrival_station, train_number, departure_terminal, arrival_terminal, bus_number, id],
         function (err) {
             if (err) {
-                console.error("Error updating booking:", err);
                 return callback(false);
             }
             callback(true);
@@ -366,7 +354,6 @@ const updateBooking = (id, booking, callback) => {
 const deleteBooking = (id, callback) => {
     db.run("DELETE FROM bookings WHERE id = ?", [id], function (err) {
         if (err) {
-            console.error("Error deleting booking:", err);
             return callback(false);
         }
         callback(true);
@@ -376,7 +363,6 @@ const deleteBooking = (id, callback) => {
 const getBookingsByTripId = (tripId, callback) => {
     db.all("SELECT * FROM bookings WHERE trip_id = ?", [tripId], (err, rows) => {
         if (err) {
-            console.error("Error fetching bookings:", err);
             return callback([]);
         }
         callback(rows);
@@ -385,14 +371,12 @@ const getBookingsByTripId = (tripId, callback) => {
 
 
 
-// Add an expense to a trip
 const addExpense = (tripId, expense, callback) => {
     const { name, amount } = expense;
     db.run("INSERT INTO expenses (trip_id, name, amount) VALUES (?, ?, ?)",
         [tripId, name, amount],
         function (err) {
             if (err) {
-                console.error("Error adding expense:", err);
                 return callback(false, null);
             }
             callback(true, this.lastID);
@@ -406,7 +390,6 @@ const updateExpense = (id, expense, callback) => {
         [name, amount, id],
         function (err) {
             if (err) {
-                console.error("Error updating expense:", err);
                 return callback(false);
             }
             callback(true);
@@ -414,7 +397,7 @@ const updateExpense = (id, expense, callback) => {
     );
 };
 
-// Delete an expense
+
 const deleteExpense = (expenseId, callback) => {
     db.run("DELETE FROM expenses WHERE id = ?", [expenseId], function (err) {
         if (err) {
@@ -429,7 +412,6 @@ const getExpensesByTripId = (tripId, callback) => {
 
     db.all("SELECT * FROM expenses WHERE trip_id = ?", [tripId], (err, expenses) => {
         if (err) {
-            console.error("Error fetching expenses from database:", err); // delete later 
             return callback([]);
         }
         callback(expenses);
@@ -442,14 +424,11 @@ const getExpensesByTripId = (tripId, callback) => {
 const getItineraryByTripId = (tripId, callback) => {
     db.get("SELECT * FROM trips WHERE id = ?", [tripId], (err, row) => {
         if (err) {
-            console.error(err);
             return callback(null);
         }
         callback(row);
     });
 };
-
-
 
 
 module.exports = { init, createUser, updateUser, getUserById, findUserByEmail, getAllTrips, addTrip, getTripById, updateTrip, deleteTrip, markTripCompleted, addScheduleItem, updateSchedule, deleteSchedule, addBooking, updateBooking, deleteBooking, addExpense, updateExpense, deleteExpense, getExpensesByTripId, getItineraryByTripId, getScheduleByTripId, getBookingsByTripId, getFilteredTrips };

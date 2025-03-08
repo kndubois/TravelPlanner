@@ -660,8 +660,13 @@ router.get('/explore', requireLogin, (req, res) => {
 
 router.get('/settings', requireLogin, (req, res) => {
     tripModel.getUserById(req.session.user.id, (user) => {
+        
         if (!user) return res.redirect('/login');
-        res.render('pages/settings', { user: req.session.user });
+
+        const success = req.query.success === "true";
+        const error   = req.query.error   === "true";
+
+        res.render('pages/settings', { user: req.session.user, success, error });
     });
 });
 
@@ -679,7 +684,10 @@ router.post('/update-settings', requireLogin, async (req, res) => {
     tripModel.updateUser(userId, { name, username, email, hashedPassword, default_currency, timezone, theme, language }, (err) => {
         if (err) return res.redirect('/settings?error=true');
 
+        req.session.user.name  = name;
         req.session.user.username = username;
+        req.session.user.email = email;
+        req.session.user.password = hashedPassword;
 
         res.redirect('/settings?success=true');
     });

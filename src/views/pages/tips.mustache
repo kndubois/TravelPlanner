@@ -4,14 +4,12 @@
     <h2 class="text-center fw-bold text-primary">Travel Tips & Advice</h2>
     <p class="text-center text-muted">Essential tips to make your trips smoother, safer, and more enjoyable.</p>
 
-    <!-- Search Bar -->
     <div class="row justify-content-center my-4">
         <div class="col-md-6">
             <input type="text" class="form-control" id="searchTips" placeholder="Search for travel tips...">
         </div>
     </div>
 
-    <!-- Categories Section -->
     <div class="row text-center mb-4">
         <div class="col-md-3">
             <button class="btn btn-outline-primary w-100 filter-btn" data-category="packing">Packing</button>
@@ -27,7 +25,6 @@
         </div>
     </div>
 
-    <!-- Tips Section -->
     <div class="row row-cols-1 row-cols-md-2 g-4" id="tipsContainer">
         {{#tips}}
         <div class="col" data-category="{{category}}">

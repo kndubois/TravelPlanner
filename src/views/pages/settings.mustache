@@ -4,10 +4,18 @@
     <h2 class="text-center fw-bold text-primary">Settings</h2>
     <p class="text-center text-muted">Manage your account details and preferences</p>
 
+            {{#success}}
+            <div class="alert alert-success text-center">Settings saved successfully!</div>
+            {{/success}}
+
+            {{#error}}
+            <div class="alert alert-danger text-center">Oops, there was an error!</div>
+            {{/error}}
+
     <div class="card shadow-sm border-0 rounded-4 p-4 mt-4">
         <form action="/update-settings" method="POST">
-            <!-- Account Settings -->
             <h5 class="fw-bold text-primary mb-3">Account Details</h5>
+
             <div class="row g-3">
                 <div class="col-md-6">
                     <label for="name" class="form-label fw-bold">Full Name</label>
@@ -71,7 +79,6 @@
                 </div>
             </div>
 
-            <!-- Save Button -->
             <div class="text-center mt-4">
                 <button type="submit" class="btn btn-primary btn-lg fw-bold px-4">Save Settings</button>
             </div>

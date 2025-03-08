@@ -19,7 +19,6 @@
 
             <input type="hidden" name="from" value="{{from}}">
 
-            <!-- Trip Name & Destination -->
             <div class="row g-4 mb-3">
             <h5 class="fw-bold text-primary"><i class="bi bi-info-circle"></i> Travel Details</h5>
                 <div class="col-md-6">
@@ -32,7 +31,6 @@
                 </div>
             </div>
 
-            <!-- Dates & Budget -->
             <div class="row g-4 mb-3">
                 <div class="col-md-4">
                     <label for="start_date" class="form-label fw-semibold">Start Date</label>
@@ -48,7 +46,6 @@
                 </div>
             </div>
 
-            <!-- Priority & Category -->
             <div class="row g-4 mb-3">
                 <div class="col-md-6">
                     <label for="priority" class="form-label fw-semibold">Priority</label>
@@ -64,7 +61,6 @@
                 </div>
             </div>
 
-            <!-- Transportation & Accommodation -->
             <div class="row g-4 mb-3">
                 <div class="col-md-6">
                     <label for="transportation" class="form-label fw-semibold">Mode of Transportation</label>
@@ -87,24 +83,19 @@
                         <option value="Camping" {{#isCamping}}selected{{/isCamping}}>Camping</option>
                         <option value="Other" {{#isOtherAccommodation}}selected{{/isOtherAccommodation}}>Other</option>
                     </select>
-                </div>
-
-                
+                </div>                
             </div>
 
-            <!-- Notes Section -->
             <div class="mb-4">
                 <label for="notes" class="form-label fw-semibold">Notes</label>
                 <textarea class="form-control" id="notes" name="notes" rows="2" placeholder="Additional details about the trip...">{{trip.notes}}</textarea>
             </div>
 
-            <!-- Reminder Checkbox -->
             <div class="form-check mb-4">
                 <input class="form-check-input" type="checkbox" id="reminder" name="reminder" {{#trip.reminder}}checked{{/trip.reminder}}>
                 <label class="form-check-label fw-semibold" for="reminder">Enable Reminder</label>
             </div>
 
-            <!-- Buttons -->
             <div class="text-center mt-4">
                 <button type="submit" class="btn btn-primary btn-lg fw-bold px-4">
                     <i class="bi bi-check-lg"></i> Save Changes

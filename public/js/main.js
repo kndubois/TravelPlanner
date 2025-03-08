@@ -147,8 +147,6 @@ function toggleEditSchedule(scheduleId) {
 }
 
 
-
-// Update an existing schedule item
 function updateSchedule(event, scheduleId, tripId) {
     event.preventDefault();
 
@@ -181,12 +179,11 @@ function updateSchedule(event, scheduleId, tripId) {
             alert("Failed to update schedule.");
         }
     })
-    .catch(err => console.error("❌ Error:", err));
+    .catch(err => console.error("Error:", err));
 }
 
 
 
-// Delete a schedule item
 function deleteSchedule(scheduleId, tripId) {
     if (!confirm("Are you sure you want to delete this schedule item?")) return;
 
@@ -200,9 +197,7 @@ function deleteSchedule(scheduleId, tripId) {
             let scheduleElement = document.getElementById(`schedule-${scheduleId}`);
             if (scheduleElement) {
                 scheduleElement.remove();
-            } else {
-                console.warn("⚠️ Schedule element not found in DOM.");
-            }
+            } 
         } else {
             alert("Failed to delete schedule.");
         }
@@ -273,11 +268,10 @@ function submitNewBooking(event) {
 }
 
 
-// Update an existing booking item
 function updateBooking(event, bookingId) {
     event.preventDefault();
 
-    let tripId = document.getElementById("trip-id").value; // Ensure trip ID is retrieved
+    let tripId = document.getElementById("trip-id").value; 
     let type = document.getElementById(`edit-booking-type-${bookingId}`).value;
     let details = document.getElementById(`edit-booking-details-${bookingId}`).value;
 
@@ -302,7 +296,7 @@ function updateBooking(event, bookingId) {
                     </div>
                 `;
             }
-            toggleEditBooking(bookingId); // Hide edit form after saving
+            toggleEditBooking(bookingId); 
         } else {
             alert("Failed to update booking.");
         }
@@ -311,7 +305,6 @@ function updateBooking(event, bookingId) {
 }
 
 
-// Delete a booking item
 function deleteBooking(bookingId, tripId) {
     if (!confirm("Are you sure you want to delete this booking?")) return;
 
@@ -343,13 +336,11 @@ function toggleEditExpense(expenseId, forceClose = false) {
     let form = document.getElementById(`edit-expense-form-${expenseId}`);
     if (form) {
         if (forceClose) {
-            form.classList.add("d-none"); // Force close after saving
+            form.classList.add("d-none"); 
         } else {
             form.classList.toggle("d-none");
         }
-    } else {
-        console.error(`⚠️ Edit form not found for Expense ID ${expenseId}`);
-    }
+    } 
 }
 
 
@@ -392,20 +383,17 @@ function submitExpense(event) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Refresh the expense list from the server
             fetch(`/itinerary/${tripId}`)
                 .then(response => response.text())
                 .then(html => {
                     let parser = new DOMParser();
                     let doc = parser.parseFromString(html, "text/html");
                     document.getElementById("expense-list").innerHTML = doc.querySelector("#expense-list").innerHTML;
-                    updateTotalSpent(); // Update total if you have this function
+                    updateTotalSpent(); 
                 });
             document.getElementById("expense-name").value = "";
             document.getElementById("expense-amount").value = "";
             toggleAddExpense();
-        } else {
-            console.error("Failed to add expense.");
         }
     })
     .catch(err => console.error("Error:", err));
@@ -424,18 +412,15 @@ function updateExpense(event, expenseId, tripId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Refresh the expense list from the server
             fetch(`/itinerary/${tripId}`)
                 .then(response => response.text())
                 .then(html => {
                     let parser = new DOMParser();
                     let doc = parser.parseFromString(html, "text/html");
                     document.getElementById("expense-list").innerHTML = doc.querySelector("#expense-list").innerHTML;
-                    updateTotalSpent(); // Update total if you have this function
+                    updateTotalSpent(); 
                 });
             toggleEditExpense(expenseId, true);
-        } else {
-            console.error("Failed to update expense.");
         }
     })
     .catch(err => console.error("Error:", err));
@@ -455,11 +440,7 @@ function deleteExpense(expenseId, tripId) {
             if (expenseElement) {
                 expenseElement.remove();
             }
-
-            // Update Total Spent
             updateTotalSpent();
-        } else {
-            console.error("Failed to delete expense.");
         }
     })
     .catch(err => console.error("Error deleting expense:", err));
