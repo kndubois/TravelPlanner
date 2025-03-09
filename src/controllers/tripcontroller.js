@@ -541,11 +541,19 @@ router.post('/add', requireLogin, (req, res) => {
 
 
     if (!destination_name || !destination || destination.length < 3 || budget <= 0) {
-        return res.status(400).send("Invalid input: Destination must be at least 3 characters, and budget must be positive.");
+        return res.render('templates/addTrip', {
+            errorMessage: "Invalid input: Destination must be at least 3 characters, and budget must be positive.",
+            formData: req.body, 
+            user: req.session.user
+        });
     }
 
     if (new Date(end_date) < new Date(start_date)) {
-        return res.status(400).send("Error: End date cannot be before start date.");
+        return res.render('templates/addTrip', {
+            errorMessage: "Error: End date cannot be before start date.",
+            formData: req.body,
+            user: req.session.user
+        });
     }
 
     tripModel.addTrip({ destination, destination_name, start_date, end_date, budget, notes, reminder, priority, category, transportation, accommodation, transportation_details, accommodation_details }, user_id, () => {
