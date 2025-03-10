@@ -11,8 +11,11 @@ packages that are included
 
 node.js
 - npm install node.js
-- node app.js
 
 run the application
 - node app.js
 - ctrl + c to refresh
+
+to log in
+- email: travel@travelplanner.com
+- password: atest
