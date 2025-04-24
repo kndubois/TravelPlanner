@@ -9,19 +9,6 @@ TravelPlanner is a web-based trip management application that allows users to pl
 view: http://localhost:3000/
 ```
 
-## install dependancies
-```
-npm install
-```
-
-## packages
-```
-- express mustache-express express-session sqlite3 
-- bcryptjs@2.4.3
-- connect-flash passport passport-local
-- dotenv 
-```
-
 ## node.js
 ```
 npm install node.js
@@ -29,6 +16,18 @@ node app.js
 ctrl + c to refresh
 ```
 
+## install dependancies
+```
+npm install
+```
+
+## packages
+```
+- npm install express mustache-express express-session sqlite3 
+- npm install bcryptjs@2.4.3
+- npm install connect-flash passport passport-local
+- npm install dotenv 
+```
 
 ## nodemon
 ```
